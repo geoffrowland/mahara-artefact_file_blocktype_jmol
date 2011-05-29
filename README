@@ -1,0 +1,203 @@
+-----------
+Jmol plugin
+-----------
+
+Mahara artefact file blocktype jmol plugin
+
+This plugin provides an interactive 3D display of local chemical structure files using the Jmol applet
+
+It is similar to other Mahara artefact file blocktype plugins, in particular the Embedded media plugin.
+
+The Jmol applet can use a variety of chemical structure file formats (mime-types)
+
+This plugin currently uses the following file types
+
+alc	 chemical/x-alchemy	    Alchemy
+cif	 chemical/x-cif	        Crystallographic Information File
+cml	 chemical/x-cml	        Chemical Markup Language
+hin	 chemical/x-hin	        HyperChem Input file
+mcif chemical/x-mmcif	    MacroMolecular Crystallographic Information File
+mol	 chemical/x-mdl-molfile	MDL Molfile
+mol2 chemical/x-mol2        SYBYL Tripos Mol2 file format
+pdb	 chemical/x-pdb	        Protein Data Bank
+sdf	 chemical/x-mdl-sdfile  Structure Data File
+xyz	 chemical/x-xyz	        XYZ Coordinate Animation format
+
+---
+Use
+---
+
+When editing the contents of a Mahara Page (View), drag the Jmol icon from the 'Files, images and videos' tab into your Page (View)
+
+Then upload/select the appropriate file and set the appropriate applet width and height (default 300 px v 300 px)
+
+For more advanced Jmol users, there are a couple of textarea controls that allow you to:
+
+1. Specify an optional Jmol startup script to customise initial display of the applet http://chemapps.stolaf.edu/jmol/docs/
+
+2. Enter optional Jmol.js JavaScript commands to add custom controls below the applet http://jmol.sourceforge.net/jslibrary/
+
+Default script values are applied for general use
+
+Note that development has focused on the functionality of this, and there may be security implications of running these scripts. Happy to receive advice and guidance from Mahara security gurus about this.
+
+------------
+Installation
+------------
+
+The latest version of the plugin, for Mahara 1.2, 1.3 and 1.4, can be downloaded from Github
+
+https://github.com/geoffrowland/mahara-artefact_file_blocktype_jmol
+
+On unpacking, the /jmol folder (and its contents) is copied into the /artefact/file/blocktype folder of your Mahara installation.
+
+Some other edits of Mahara files are required (or you can copy across the appropriate files from the download bundle.
+
+To 
+
+/artefact/file/lang/en.utf8/artefact.file.php
+
+add, immediately after the other file types
+
+// Chemical
+$string['alc'] = 'Alchemy File';
+$string['cif'] = 'Crystallographic Information File';
+$string['cml'] = 'Chemical Markup language';
+$string['hin'] = 'HyperChem Input File';
+$string['mcif'] = 'MacroMolecular Crystallographic Information File';
+$string['mol'] = 'MDL Molfile';
+$string['mol2'] = 'SYBYL Tripos Mol2 File';
+$string['pdb'] = 'Protein Data Bank';
+$string['sdf'] = 'MDL Structure Data File';
+$string['xyz'] = 'XYZ Coordinate Animation Format';
+
+To
+
+/artefact/file/lib.php
+
+immediately after
+
+        if ($um->file['type'] == 'application/octet-stream') {
+            // the browser wasn't sure, so use file_mime_type to guess
+            require_once('file.php');
+            $data->filetype = file_mime_type($um->file['tmp_name']);
+        }
+        else {
+            $data->filetype = $um->file['type'];
+        }
+add
+        // The browser may have been wrong, so use file extension to force some mime-types.////
+        require_once('file.php'); 
+        switch ($um->original_filename_extension()) {
+            case 'mm': $data->filetype = 'application/x-freemind';
+            break;
+            case 'alc': $data->filetype = 'chemical/x-alchemy';
+            break;
+            case 'cif': $data->filetype = 'chemical/x-cif';
+            break;
+            case 'cml': $data->filetype = 'chemical/x-cml';
+            break;
+            case 'hin': $data->filetype = 'chemical/x-hin';
+            break;
+            case 'mcif': $data->filetype = 'chemical/x-mmcif';
+            break;
+            case 'mol': $data->filetype = 'chemical/x-mdl-molfile';
+            break;
+            case 'mol2': $data->filetype = 'chemical/x-mol2';
+            break;
+            case 'pdb': $data->filetype = 'chemical/x-pdb';
+            break;
+            case 'sdf': $data->filetype = 'chemical/x-mdl-sdfile';
+            break;
+            case 'xyz': $data->filetype = 'chemical/x-xyz';
+            break;
+        }
+
+To
+
+/artefact/file/filetypes.xml
+
+just before <!-- General types -->
+
+add
+
+    <!-- Chemical formats -->
+    <filetype>
+        <description>alc</description>
+        <mimetypes>
+            <mimetype>chemical/x-alchemy</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>cif</description>
+        <mimetypes>
+            <mimetype>chemical/x-cif</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>cml</description>
+        <mimetypes>
+            <mimetype>chemical/x-cml</mimetype>
+        </mimetypes>
+    </filetype> 
+    <filetype>
+        <description>hin</description>
+        <mimetypes>
+            <mimetype>chemical/x-hin</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>mcif</description>
+        <mimetypes>
+            <mimetype>chemical/x-mmcif</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>mol</description>
+        <mimetypes>
+            <mimetype>chemical/x-mdl-molfile</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>mol2</description>
+        <mimetypes>
+            <mimetype>chemical/x-mol2</mimetype>
+        </mimetypes>
+    </filetype>              
+    <filetype>
+        <description>pdb</description>
+        <mimetypes>
+            <mimetype>chemical/x-pdb</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>sdf</description>
+        <mimetypes>
+            <mimetype>chemical/x-mdl-sdfile</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>xyz</description>
+        <mimetypes>
+            <mimetype>chemical/x-xyz</mimetype>
+        </mimetypes>
+    </filetype>
+    <!-- FreeMind -->
+    <filetype>
+        <description>mm</description>
+        <mimetypes>
+            <mimetype>application/x-freemind</mimetype>
+        </mimetypes>
+    </filetype>
+
+
+Remember to set appropriate server permissions for the new folders and contents.
+
+For the /jmol plugin you also need to download and unpack the latest Jmol stable version (currently 12.0.43), rename the unpacked folder (e.g. /jmol-12.0.43) to /jmol and copy this (and its contents) into the /lib folder of your Mahara installation to give /lib/jmol. Not all the contents of the jmol folder are actually required. However, Jmol code is frequently updated so it is convenient to just replace the /jmol folder with the latest version.
+
+Finally, visit your Site Administration > Plugin Administration page to enable the plugin. Remember to select the chemical file types you wish to use from the configuration menu. 
+
+Of course, for the /jmolnih plugin, you will need an up-to-date Java installation on the client computer. http://www.java.com
+
+During configuration and initial display of the Jmol applet in a view, you may have to refresh the browser.
+
