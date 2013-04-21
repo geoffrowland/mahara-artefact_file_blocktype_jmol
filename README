@@ -12,13 +12,13 @@ The Jmol applet can use a variety of chemical structure file formats (mime-types
 
 This plugin currently uses the following file types
 
-alc	 chemical/x-alchemy	    Alchemy
+alc	 chemical/x-alchemy	Alchemy
 cif	 chemical/x-cif	        Crystallographic Information File
 cml	 chemical/x-cml	        Chemical Markup Language
 hin	 chemical/x-hin	        HyperChem Input file
-mcif chemical/x-mmcif	    MacroMolecular Crystallographic Information File
+mcif     chemical/x-mmcif	MacroMolecular Crystallographic Information File
 mol	 chemical/x-mdl-molfile	MDL Molfile
-mol2 chemical/x-mol2        SYBYL Tripos Mol2 file format
+mol2     chemical/x-mol2        SYBYL Tripos Mol2 file format
 pdb	 chemical/x-pdb	        Protein Data Bank
 sdf	 chemical/x-mdl-sdfile  Structure Data File
 xyz	 chemical/x-xyz	        XYZ Coordinate Animation format
@@ -197,7 +197,7 @@ For the /jmol plugin you also need to download and unpack the latest Jmol stable
 
 Finally, visit your Site Administration > Plugin Administration page to enable the plugin. Remember to select the chemical file types you wish to use from the configuration menu. 
 
-Of course, for the /jmolnih plugin, you will need an up-to-date Java installation on the client computer. http://www.java.com
+Of course, for the /jmol plugin, you will need an up-to-date Java installation on the client computer. http://www.java.com
 
 During configuration and initial display of the Jmol applet in a view, you may have to refresh the browser.
 
