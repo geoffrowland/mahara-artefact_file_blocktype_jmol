@@ -27,8 +27,11 @@
  * This plugin uses the Jmol Java applet for interactive 3D rendering of
  * chemical structures
  * http://jmol.sourceforge.net
+ * 
+ * Updated for JSmol (JavaScript/HTML5 version of Jmol) Geoffrey Rowland 2013 growland@strode-college.ac.uk
+ * http://sourceforge.net/projects/jsmol/
  *
- * Examples of chemical structure file formats, viewable with Jmol, are available from
+ * Examples of chemical structure file formats, viewable with Jmol/JSmol, are available from
  * http://jmol.svn.sourceforge.net/viewvc/jmol/trunk/Jmol-datafiles/
  */
 
@@ -64,7 +67,8 @@ class PluginBlocktypeJmol extends PluginBlocktype {
         if (empty($configdata['artefactid'])) {
             return '';
         }
-        $result = self::get_js_source();
+        $result = self::get_js_nojq_source();
+                     
         require_once(get_config('docroot') . 'artefact/lib.php');
         $artefact = $instance->get_artefact_instance($configdata['artefactid']);
         if (!file_exists($artefact->get_path())) {
@@ -83,7 +87,7 @@ class PluginBlocktypeJmol extends PluginBlocktype {
             return get_string('typeremoved', 'blocktype.file/jmol');
         }
         $callbacks = self::get_all_filetype_players();
-        $result .= '<div class="jmol-container center"><div class="jmol">' . call_static_method('PluginBlocktypeJmol', $callbacks[$mimetypefiletypes[$mimetype]], $artefact, $instance, $width, $height, $initscript, $controls) . '</div></div>';
+        $result .= '<div class="jmol-container center"><div class="jmol">' . call_static_method('PluginBlocktypeJmol', $callbacks[$mimetypefiletypes[$mimetype]], $artefact, $instance, $width, $height, $initscript, $controls, $jmolpopupmenu) . '</div></div>';
         if (!empty($configdata['showdescription']) && !empty($description)) {
             $result .= '<p>'.$description.'</p>';
         }
@@ -224,7 +228,6 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         );
     }
 
-
     private static function get_allowed_filetypes() {
         if ($data = get_config_plugin('blocktype', 'jmol', 'enabledtypes')) {
             return unserialize($data);
@@ -232,11 +235,9 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         return array();
     }
 
-
     private static function get_allowed_mimetypes() {
         return array_keys(self::get_allowed_mimetype_filetypes());
     }
-
 
     private static function get_allowed_mimetype_filetypes() {
         if ($data = self::get_allowed_filetypes()) {
@@ -274,7 +275,7 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
     }
     
     // Jmol player
-    public static function jmol_player($artefact, $block, $width, $height, $initscript, $controls) {
+    public static function jmol_player($artefact, $block, $width, $height, $initscript, $controls, $jmolpopupmenu) {
         static $count = 0;
         $count++;
         $id = time() . $count;
@@ -285,38 +286,68 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         // Escape linux line endings \n
         // Convert double quotes to single       
         $search = array("\r\n", "\r", "\n", '"');
-        $replace = array("\n", "\n", "\\n", "'");
-        $moldata = str_replace($search, $replace, $moldata);
+        $replace = array("\n", "\n", "\\\\n", "'");
+        $moldata = str_replace($search, $replace, $moldata);      
+        $molfile = explode(".", hsc($artefact->get('title')));
+        // Use file extension to customise display options
+        $molext = $molfile[1];
         $html = '';
         $html .= '<div style="width:'.$width.'px">';
         $html .= '<a title="Download structure data file" href ="' . $url . '">' . hsc($artefact->get('title')) . '</a><br />';
-        $html .= '<div style="width:'.$width.'px; height:'.$height.'px;border: 1px solid lightgrey">';
-        $html .= '<script type="text/javascript">jmolSetAppletColor("white")</script>';
-        // Loading the file contents into PHP, then using JmolAppletInline(), avoids issues with Java applet security and Mahara view permissions
-        $html .= '<script type="text/javascript">jmolAppletInline(['.$width.','.$height.'], "'.$moldata.'", "'.$initscript.'", "'.$id.'")</script>';
+        $html .= '<div id="jmoldiv'.$id.'" style="width:'.$width.'px; height:'.$height.'px; border: 1px solid lightgrey; background-color: lightgrey; background-image:url(\''.get_config('wwwroot').'artefact/file/blocktype/jmol/Jmol_icon_94.png\'); background-repeat: no-repeat">';
+        // Loading the file contents into PHP, then using load inline, avoids issues with Java applet security and Mahara view permissions
+        $html .= '<script type="text/javascript">';
+        $html .= 'var info'.$id.' = {';
+        $html .= 'width: '.$width.',';
+        $html .= 'height: '.$height.',';
+        $html .= 'j2sPath: "'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/j2s",';
+        $html .= 'serverURL: "'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/jsmol.php",'; 
+        $html .= 'isSigned: false,';
+        $html .= 'jarPath: "'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/java",';
+        $html .= 'jarFile: "JmolApplet0.jar",';
+        $html .= 'use: "HTML5",';
+        $html .= 'color: "white",';
+        $html .= 'disableJ2SLoadMonitor: true,';
+        $html .= 'disableInitialConsole: true,';
+        $html .= 'addSelectionOptions: false,';
+        if ($molext == "cif"){
+            $html .= 'script: "load inline \"'.$moldata.'\" {1 1 1} PACKED;'.$initscript.';'.$jmolpopupmenu.'"';
+        }else if ($molext == "pdb"){
+            $html .= 'script: "set pdbAddHydrogens true; load inline \"'.$moldata.'\";'.$initscript.';'.$jmolpopupmenu.'"';
+        }else{
+            $html .= 'script: "load inline \"'.$moldata.'\";'.$initscript.';'.$jmolpopupmenu.'"';
+        }
+        $html .= '};';
+        // these functions mimic behavior of Jmol.js
+        $html .= 'function jmolCheckbox(script1, script0,text,ischecked) {Jmol.jmolCheckbox(jmolApplet'.$id.',script1, script0, text, ischecked)}';
+        $html .= 'function jmolButton(script, text) {Jmol.jmolButton(jmolApplet'.$id.', script,text)}';
+        $html .= 'function jmolHtml(s) { document.write(s) };';
+        $html .= 'function jmolBr() { jmolHtml("<br />") }';
+        $html .= 'function jmolMenu(a) {Jmol.jmolMenu(jmolApplet'.$id.', a)}';
+        $html .= 'Jmol.getApplet("jmolApplet'.$id.'", info'.$id.');';
+        $html .= 'jmolHtml("</div>");';
+        $html .= 'jmolHtml("<div style=\"text-align:left\">");';
+        $html .= ''.$controls.';';
+        $html .= '</script>';
         $html .= '</div>';
-        $html .= '<div style="text-align:left">';
-        $html .= '<script type="text/javascript">'.$controls.'</script>';
         $html .= '</div>';
-        $html .= '</div>';
-    return $html;
+        return $html;
     }
 
     private static function get_download_link(ArtefactTypeFile $artefact, BlockInstance $instance) {      
         return get_config('wwwroot') . 'artefact/file/download.php?file=' 
-            . $artefact->get('id') 
+            . $artefact->get('id')
             . '&view=' . $instance->get('view')
             . '&download=1';
     }
-    
-    // Jmol JavaScript source only called once
-    private static function get_js_source() {
+
+    private static function get_js_nojq_source() {
         if (defined('BLOCKTYPE_JMOL_JS_INCLUDED')) {
             return '';
         }
+
         define('BLOCKTYPE_JMOL_JS_INCLUDED', true);
-        return '<script type="text/javascript" src="'.get_config('wwwroot').'lib/jmol/Jmol.js"></script>
-             <script type="text/javascript">jmolInitialize("'.get_config('wwwroot').'lib/jmol/")</script>';
+            return '<script type="text/javascript" src="'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/JSmol.min.nojq.js"></script>';
     }
 
     public static function default_copy_type() {
