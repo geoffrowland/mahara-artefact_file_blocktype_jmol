@@ -17,11 +17,13 @@ This plugin currently uses the following file types
 alc	 chemical/x-alchemy	Alchemy
 cif	 chemical/x-cif	        Crystallographic Information File
 cml	 chemical/x-cml	        Chemical Markup Language
-hin	 chemical/x-hin	        HyperChem Input file
+hin	 chemical/x-hin	        HyperChem Input
 mcif     chemical/x-mmcif	MacroMolecular Crystallographic Information File
 mol	 chemical/x-mdl-molfile	MDL Molfile
 mol2     chemical/x-mol2        SYBYL Tripos Mol2 file format
 pdb	 chemical/x-pdb	        Protein Data Bank
+pdb.gz                          Gzipped Protein Data Bank
+pse	 chemical/x-pse	        PyMOL Session
 sdf	 chemical/x-mdl-sdfile  Structure Data File
 xyz	 chemical/x-xyz	        XYZ Coordinate Animation format
 
@@ -55,6 +57,12 @@ On unpacking, the /jmol folder (and its contents) is copied into the /artefact/f
 
 Some other edits of Mahara files are required (or you can copy across the appropriate files from the download bundle).
 
+If you wish to display binary format (.pse or .pdb.gz) files then you need to edit /lib/web.php to comment out the line that loads jQuery
+and load JSmoljQuery instead. The completed edit should be as follows:
+
+// $javascript_array[] = $jsroot . 'jquery/jquery.js';
+$javascript_array[] = $wwwroot . 'artefact/file/blocktype/jmol/jsmol/js/JSmoljQuery.js';
+
 To 
 
 /artefact/file/lang/en.utf8/artefact.file.php
@@ -70,12 +78,13 @@ $string['mcif'] = 'MacroMolecular Crystallographic Information File';
 $string['mol'] = 'MDL Molfile';
 $string['mol2'] = 'SYBYL Tripos Mol2 File';
 $string['pdb'] = 'Protein Data Bank';
+$string['pse'] = 'PyMOL Session';
 $string['sdf'] = 'MDL Structure Data File';
 $string['xyz'] = 'XYZ Coordinate Animation Format';
 
-Then you need to edit /artefact/file/lib.php to 'force' the appropriate file mime-types. The precise details differ depending on the Mahara version.
+Then you need to edit /artefact/file/lib.php to set the appropriate file mime-types. The precise details differ depending on the Mahara version.
 
-For Mahara 1.6: Immediately after:
+For Mahara 1.7 and 1.6: Immediately after:
 
        if (empty($data->filetype) || $data->filetype == 'application/octet-stream') {
            $data->filetype = $data->guess;
@@ -103,6 +112,8 @@ add
            case 'mol2': $data->filetype = 'chemical/x-mol2';
            break;
            case 'pdb': $data->filetype = 'chemical/x-pdb';
+           break;
+           case 'pse': $data->filetype = 'chemical/x-pse';
            break;
            case 'sdf': $data->filetype = 'chemical/x-mdl-sdfile';
            break;
@@ -141,6 +152,8 @@ add
             case 'mol2': $data->filetype = 'chemical/x-mol2';
             break;
             case 'pdb': $data->filetype = 'chemical/x-pdb';
+            break;
+            case 'pse': $data->filetype = 'chemical/x-pse';
             break;
             case 'sdf': $data->filetype = 'chemical/x-mdl-sdfile';
             break;
@@ -206,6 +219,12 @@ add
         </mimetypes>
     </filetype>
     <filetype>
+        <description>pse</description>
+        <mimetypes>
+            <mimetype>chemical/x-pse</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
         <description>sdf</description>
         <mimetypes>
             <mimetype>chemical/x-mdl-sdfile</mimetype>
@@ -225,10 +244,11 @@ add
         </mimetypes>
     </filetype>
 
+Then, to install the file types with the Mahara database, you will need to increment (e.g. increase by 1) the value of $config->version in /artefact/file/version.php
 
 Remember to set appropriate server permissions for the new folders and contents.
 
-This plugin includes a recent Jmol/JSmol version (13.1.16_dev) located in the /jsmol folder. However, JSmol code is frequently updated so you may wish to replace/update the contents of the /jsmol folder with the latest version, unpacked from http://chemapps.stolaf.edu/jmol/jsmol.zip 
+This plugin includes a recent Jmol/JSmol version (13.3.3_dev) located in the /jsmol folder. However, JSmol code is frequently updated so you may wish to replace/update the contents of the /jsmol folder with the latest version, unpacked from http://chemapps.stolaf.edu/jmol/zip/jsmol.zip 
 
 Finally, visit your Site Administration > Plugin Administration page to enable the plugin. Remember to select the chemical file types you wish to use from the configuration menu. 
 
