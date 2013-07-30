@@ -8,7 +8,7 @@ type ..\js\JSmolControls.js >> min.js
 type ..\js\JSmolApi.js >> min.js
 type ..\js\j2sjmol.js >> min.js
 java -jar closure_compiler.jar --js min.js --js_output_file ..\JSmol.min.js
-
+copy min.js full\JSmol.test.js
 
 @echo off
 echo JSmol.min.nojq.js
@@ -47,6 +47,6 @@ java -jar closure_compiler.jar --js min.js --js_output_file ..\JSmol.lite.nojq.j
 c:\"program files\7-zip\7z.exe" a -tgzip ../JSmol.lite.nojq.js.gz ../JSmol.lite.nojq.js
 
 
-pause
 del min.js
-call zip.bat
+rem pause press enter to zip up the files
+rem call zip.bat

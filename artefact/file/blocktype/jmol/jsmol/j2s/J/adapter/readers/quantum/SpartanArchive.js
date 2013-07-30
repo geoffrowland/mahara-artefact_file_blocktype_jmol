@@ -244,7 +244,7 @@ J.util.Logger.debug (this.r.orbitals.size () + " molecular orbitals read");
 });
 $_M(c$, "readProperties", 
 function () {
-J.util.Logger.debug ("Reading PROPARC properties records...");
+if (J.util.Logger.debugging) J.util.Logger.debug ("Reading PROPARC properties records...");
 while (this.readLine () != null && !this.line.startsWith ("ENDPROPARC") && !this.line.startsWith ("END Directory Entry ")) {
 if (this.line.startsWith ("PROP")) this.readProperty ();
  else if (this.line.startsWith ("DIPOLE")) this.readDipole ();

@@ -7,30 +7,13 @@ call loadScript java\net\URLDecoder.js
 call loadScript java\net\URLStreamHandlerFactory.js
 call loadScript java\net\URLStreamHandler.js
 call loadScript java\net\Parts.js
-call loadScript java\net\URL.js
-call loadScript java\net\URLConnection.js
-call loadScript J\awtjs2d\JmolURLConnection.js
-
 
 call loadScript java\util\MapEntry.js ------- java.util.Hashtable
 call loadScript java\util\Dictionary.js ------- java.util.Hashtable
-call loadScript java\util\Hashtable.js ------- java.net.URL
-
-
-call loadScript J\util\LoggerInterface.js ------- org.jmol.util.DefaultLogger
-call loadScript J\util\DefaultLogger.js ------- org.jmol.util.Logger
-call loadScript J\util\Logger.js
-call loadScript J\i18n\Resource.js
-call loadScript J\i18n\Language.js
-call loadScript java\text\MessageFormat.js
-call loadScript J\i18n\GT.js
-
-
-
-call loadScript java\lang\AbstractStringBuilder.js ------- java.lang.StringBuffer
-call loadScript java\lang\StringBuffer.js
-call loadScript java\lang\StringBuilder.js
 call loadScript java\util\AbstractCollection.js
+call loadScript java\lang\AbstractStringBuilder.js ------- java.lang.StringBuffer
+call loadScript java\lang\StringBuilder.js
+call loadScript java\lang\StringBuffer.js
 call loadScript java\util\AbstractList.js ------- java.util.ArrayList
 call loadScript java\util\ArrayList.js
 call loadScript java\util\AbstractSet.js
@@ -39,8 +22,29 @@ call loadScript java\util\AbstractMap.js ------- java.util.Collections
 call loadScript java\util\SortedMap.js ------- java.util.Collections
 call loadScript java\util\SortedSet.js ------- java.util.Collections
 call loadScript java\util\Collections.js
+call loadScript java\util\Hashtable.js ------- java.net.URL
+
+
+call loadScript java\net\URL.js
+call loadScript java\net\URLConnection.js
+call loadScript J\awtjs2d\JmolURLConnection.js
+
+
+call loadScript java\text\MessageFormat.js
+
+
 call loadScript java\util\Random.js
 call loadScript J\util\JmolList.js
+call loadScript J\util\ArrayUtil.js
+
+call loadScript J\util\LoggerInterface.js ------- org.jmol.util.DefaultLogger
+call loadScript J\util\DefaultLogger.js ------- org.jmol.util.Logger
+call loadScript J\util\Logger.js
+call loadScript J\i18n\Resource.js
+call loadScript J\i18n\Language.js
+call loadScript J\i18n\GT.js
+
+
 call loadScript J\awtjs2d\JmolURLConnection.js
 call loadScript J\api\JmolCallbackListener.js ------- org.jmol.api.JmolStatusListener
 call loadScript J\api\JmolStatusListener.js ------- org.jmol.appletjs.Jmol
@@ -56,9 +60,9 @@ call loadScript J\util\SB.js
 call loadScript J\script\T.js ------- org.jmol.script.SV
 call loadScript J\util\Tuple3d.js -- required by J.util.Vector3d
 call loadScript J\util\Vector3d.js
+call loadScript J\util\Tuple3f.js
 call loadScript J\util\P3.js ------- org.jmol.script.SV
-call loadScript J\script\SV.js
-call loadScript J\util\ArrayUtil.js
+call loadScript J\util\V3.js ------- org.jmol.util.Vibration
 call loadScript J\util\BS.js ------- org.jmol.util.BSUtil
 call loadScript J\util\BSUtil.js
 call loadScript J\util\Matrix3f.js
@@ -66,24 +70,25 @@ call loadScript J\util\Matrix4f.js
 call loadScript J\util\JmolEdge.js ------- org.jmol.modelset.Bond
 call loadScript J\modelset\Bond.js
 call loadScript J\util\Measure.js
-call loadScript J\util\Tuple3f.js
 call loadScript J\util\Tuple4f.js ------- org.jmol.util.P4
 call loadScript J\util\P4.js
+call loadScript J\script\SV.js
 call loadScript J\io\Encoding.js
 call loadScript java\io\FilterInputStream.js ------- java.io.BufferedInputStream
 call loadScript java\io\BufferedInputStream.js ------- org.jmol.viewer.JC
 call loadScript java\util\Properties.js ------- org.jmol.viewer.JC
 call loadScript J\util\Elements.js ------- org.jmol.viewer.JC
-call loadScript J\util\V3.js ------- org.jmol.viewer.JC
+call loadScript J\util\Vibration.js ------- org.jmol.viewer.JC
+call loadScript J\util\Modulation.js
 call loadScript J\viewer\JC.js
 call loadScript J\util\Int2IntHash.js ------- org.jmol.util.C
 call loadScript J\util\C.js
 call loadScript J\util\Eigen.js
+call loadScript J\util\EigenSort.js
 call loadScript J\util\Quaternion.js
 call loadScript J\constant\EnumPalette.js
 call loadScript J\util\ColorUtil.js
 call loadScript J\util\Shader.js
-call loadScript J\util\Quadric.js
 call loadScript J\util\AxisAngle4f.js
 call loadScript J\api\JmolViewer.js ------- org.jmol.viewer.Viewer
 call loadScript J\atomdata\AtomDataServer.js ------- org.jmol.viewer.Viewer
@@ -174,7 +179,7 @@ call loadScript J\script\ScriptException.js
 call loadScript J\bspt\CubeIterator.js
 call loadScript J\bspt\Element.js ------- org.jmol.bspt.Leaf
 call loadScript J\bspt\Leaf.js
-call loadScript J\shape\Object2d.js
+call loadScript J\modelset\Object2d.js
 call loadScript J\util\ColorEncoder.js
 call loadScript J\api\JmolGraphicsInterface.js ------- org.jmol.util.GData
 call loadScript J\util\GData.js
@@ -200,7 +205,6 @@ call loadScript J\viewer\ModelManager.js
 call loadScript J\viewer\SelectionManager.js
 call loadScript J\viewer\StatusManager.js
 call loadScript J\viewer\TransformManager.js ------- org.jmol.viewer.TransformManager10
-call loadScript J\modelset\ModelSettings.js
 call loadScript J\modelset\ModelLoader.js
 call loadScript J\viewer\TransformManager11.js
 call loadScript J\modelset\Chain.js
@@ -268,7 +272,7 @@ call loadScript J\shape\Object2dShape.js -- required by org.jmol.shape.TextShape
 call loadScript J\shape\TextShape.js -- required by org.jmol.shape.Echo
 call loadScript J\shape\Axes.js
 call loadScript J\shape\Echo.js
-call loadScript J\shape\Text.js
+call loadScript J\modelset\Text.js
 call loadScript J\shape\Halos.js
 call loadScript J\shape\Labels.js
 call loadScript J\shape\Hover.js
@@ -290,5 +294,7 @@ call loadScript java\io\FileOutputStream.js
 call loadScript J\awtjs\Platform.js
 call loadScript J\awtjs\Font.js
 call loadScript J\awtjs\Image.js
+call loadScript J\util\Tensor.js
+
 type corebottom.js >> core.js
 call setCore core

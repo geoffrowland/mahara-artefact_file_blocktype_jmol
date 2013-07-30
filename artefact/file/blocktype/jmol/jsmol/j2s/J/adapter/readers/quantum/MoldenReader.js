@@ -209,7 +209,7 @@ if (J.util.Logger.debugging) {
 J.util.Logger.debug (coefs.length + " coefficients in MO " + this.orbitals.size ());
 }}this.line = l;
 }
-J.util.Logger.debug ("read " + this.orbitals.size () + " MOs");
+if (J.util.Logger.debugging) J.util.Logger.debug ("read " + this.orbitals.size () + " MOs");
 this.setMOs ("eV");
 if (this.haveEnergy && this.doSort) this.sortMOs ();
 return false;

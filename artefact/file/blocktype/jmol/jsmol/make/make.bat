@@ -162,11 +162,12 @@ call loadScript J\renderbio\TraceRenderer.js
 call setCore corebio
 
 echo coresurface
+call loadScript J\api\VolumeDataInterface.js -- required by org.jmol.jvxl.data.VolumeData
+call loadScript J\io\XmlReader.js
 call loadScript J\jvxl\api\VertexDataServer.js -- required by org.jmol.jvxl.api.MeshDataServer
 call loadScript J\jvxl\api\MeshDataServer.js -- required by org.jmol.shapesurface.Isosurface
 call loadScript J\shapesurface\Isosurface.js
 call loadScript J\jvxl\data\JvxlCoder.js
-call loadScript J\api\VolumeDataInterface.js -- required by org.jmol.jvxl.data.VolumeData
 call loadScript J\jvxl\data\VolumeData.js
 call loadScript J\jvxl\data\JvxlData.js
 call loadScript J\jvxl\data\MeshData.js
@@ -179,6 +180,9 @@ call loadScript J\shapesurface\IsosurfaceMesh.js
 call loadScript J\jvxl\readers\VolumeDataReader.js -- required by org.jmol.jvxl.readers.AtomDataReader
 call loadScript J\jvxl\readers\AtomDataReader.js -- required by org.jmol.jvxl.readers.IsoSolventReader
 call loadScript J\jvxl\readers\IsoSolventReader.js
+call loadScript J\jvxl\readers\SurfaceFileReader.js -- required by J.jvxl.readers.VolumeFileReader
+call loadScript J\jvxl\readers\VolumeFileReader.js -- required by J.jvxl.readers.JvxlXmlReader
+call loadScript J\jvxl\readers\JvxlXmlReader.js
 call loadScript J\rendersurface\IsosurfaceRenderer.js
 call setCore coresurface
 
@@ -188,12 +192,30 @@ call loadScript J\symmetry\Symmetry.js
 call loadScript J\symmetry\PointGroup.js
 call loadScript J\symmetry\SpaceGroup.js
 call loadScript J\symmetry\HallInfo.js
+call loadScript J\symmetry\HallRotationTerm.js
 call loadScript J\symmetry\HallRotation.js
 call loadScript J\symmetry\HallTranslation.js
 call loadScript J\symmetry\SymmetryOperation.js
 call loadScript J\symmetry\SymmetryInfo.js
 call loadScript J\symmetry\UnitCell.js
 call setCore coresym
+
+echo corebinary
+call loadScript J\api\JmolDocument.js -- required by J.io2.BinaryDocument
+call loadScript java\io\DataInputStream.js
+call loadScript J\io2\BinaryDocument.js
+call setCore corebinary
+
+echo corepymol
+call loadScript J\api\JmolSceneGenerator.js
+call loadScript J\adapter\readers\pymol\PickleReader.js
+call loadScript J\api\PymolAtomReader.js -- required by J.adapter.readers.pymol.PyMOLReader
+call loadScript J\adapter\readers\pymol\PyMOL.js
+call loadScript J\adapter\readers\pymol\JmolObject.js
+call loadScript J\adapter\readers\pymol\PyMOLGroup.js
+call loadScript J\adapter\readers\pymol\PyMOLScene.js
+call loadScript J\adapter\readers\pymol\PyMOLReader.js
+call setCore corepymol
 
 echo coresmiles
 call loadScript J\api\SmilesMatcherInterface.js -- required by org.jmol.smiles.SmilesMatcher

@@ -25,7 +25,7 @@ var axes = this.shape;
 var mad = this.viewer.getObjectMad (1);
 if (mad == 0 || !this.g3d.checkTranslucent (false)) return false;
 var isXY = (axes.axisXY.z != 0);
-if (!isXY && this.viewer.isNavigating () && this.viewer.getBoolean (603979887)) return false;
+if (!isXY && this.viewer.isNavigating () && this.viewer.getBoolean (603979888)) return false;
 var axesMode = this.viewer.getAxesMode ();
 this.imageFontScaling = this.viewer.getImageFontScaling ();
 if (this.viewer.areAxesTainted ()) {

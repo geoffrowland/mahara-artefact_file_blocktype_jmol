@@ -3,7 +3,7 @@ Clazz.load (["java.lang.Enum", "J.api.JmolViewer", "J.atomdata.AtomDataServer", 
 c$ = Clazz.decorateAsClass (function () {
 this.autoExit = false;
 this.haveDisplay = false;
-this.isJS = false;
+this.$isJS = false;
 this.isWebGL = false;
 this.isSingleThreaded = false;
 this.queueOnHold = false;
@@ -117,6 +117,9 @@ this.jsExporter3D = null;
 this.htPdbBondInfo = null;
 this.timeouts = null;
 this.scriptDelayThread = null;
+this.chainMap = null;
+this.chainList = null;
+this.nmrCalculation = null;
 Clazz.instantialize (this, arguments);
 }, J.viewer, "Viewer", J.api.JmolViewer, J.atomdata.AtomDataServer);
 Clazz.prepareFields (c$, function () {
@@ -128,10 +131,12 @@ this.localFunctions =  new java.util.Hashtable ();
 this.privateKey = Math.random ();
 this.actionStates =  new J.util.JmolList ();
 this.actionStatesRedo =  new J.util.JmolList ();
+this.chainMap =  new java.util.Hashtable ();
+this.chainList =  new J.util.JmolList ();
 });
 $_M(c$, "finalize", 
 function () {
-J.util.Logger.debug ("viewer finalize " + this);
+if (J.util.Logger.debugging) J.util.Logger.debug ("viewer finalize " + this);
 Clazz.superCall (this, J.viewer.Viewer, "finalize", []);
 });
 c$.getJmolVersion = Clazz.overrideMethod (c$, "getJmolVersion", 
@@ -167,6 +172,10 @@ return this.statusManager;
 Clazz.overrideMethod (c$, "isApplet", 
 function () {
 return this.$isApplet;
+});
+$_M(c$, "isJS", 
+function () {
+return this.$isJS;
 });
 $_M(c$, "isRestricted", 
 function (a) {
@@ -239,13 +248,14 @@ o = (this.commandOptions.contains ("platform=") ? this.commandOptions.substring 
 }if (Clazz.instanceOf (o, String)) {
 platform = o;
 this.isWebGL = (platform.indexOf (".awtjs.") >= 0);
-this.isJS = this.isWebGL || (platform.indexOf (".awtjs2d.") >= 0);
+this.$isJS = this.isWebGL || (platform.indexOf (".awtjs2d.") >= 0);
 o = J.api.Interface.getInterface (platform);
 }this.apiPlatform = o;
 this.display = info.get ("display");
 this.isSingleThreaded = this.apiPlatform.isSingleThreaded ();
-this.$noGraphicsAllowed = (this.display == null && this.checkOption2 ("noGraphics", "-n"));
-this.haveDisplay = (this.display != null && !this.$noGraphicsAllowed && !this.isHeadless () && !this.checkOption2 ("isDataOnly", "\0"));
+this.$noGraphicsAllowed = this.checkOption2 ("noGraphics", "-n");
+this.haveDisplay = (this.isWebGL || this.display != null && !this.$noGraphicsAllowed && !this.isHeadless () && !this.checkOption2 ("isDataOnly", "\0"));
+this.$noGraphicsAllowed = new Boolean (this.$noGraphicsAllowed & (this.display == null)).valueOf ();
 if (this.haveDisplay) {
 this.mustRender = true;
 this.multiTouch = this.checkOption2 ("multiTouch", "-multitouch");
@@ -416,7 +426,7 @@ info.put ("registry", this.statusManager.getRegistryInfo ());
 }info.put ("version", J.viewer.JC.version);
 info.put ("date", J.viewer.JC.date);
 info.put ("javaVendor", J.viewer.Viewer.strJavaVendor);
-info.put ("javaVersion", J.viewer.Viewer.strJavaVersion + (!this.isJS ? "" : this.isWebGL ? "(WebGL)" : "(HTML5)"));
+info.put ("javaVersion", J.viewer.Viewer.strJavaVersion + (!this.$isJS ? "" : this.isWebGL ? "(WebGL)" : "(HTML5)"));
 info.put ("operatingSystem", J.viewer.Viewer.strOSName);
 return info;
 });
@@ -427,7 +437,7 @@ this.setStartupBooleans ();
 this.global.setI ("_width", this.dimScreen.width);
 this.global.setI ("_height", this.dimScreen.height);
 if (this.haveDisplay) {
-this.global.setB ("_is2D", this.isJS && !this.isWebGL);
+this.global.setB ("_is2D", this.$isJS && !this.isWebGL);
 this.global.setB ("_multiTouchClient", this.actionManager.isMTClient ());
 this.global.setB ("_multiTouchServer", this.actionManager.isMTServer ());
 }this.colorManager.resetElementColors ();
@@ -454,9 +464,17 @@ function () {
 return this.stateManager.listSavedStates ();
 });
 $_M(c$, "saveOrientation", 
-function (saveName) {
-this.stateManager.saveOrientation (saveName);
-}, "~S");
+function (saveName, pymolView) {
+this.stateManager.saveOrientation (saveName, pymolView);
+}, "~S,~A");
+$_M(c$, "saveScene", 
+function (saveName, scene) {
+this.stateManager.saveScene (saveName, scene);
+}, "~S,java.util.Map");
+$_M(c$, "restoreScene", 
+function (saveName, timeSeconds) {
+this.stateManager.restoreScene (saveName, timeSeconds);
+}, "~S,~N");
 $_M(c$, "restoreOrientation", 
 function (saveName, timeSeconds) {
 return this.stateManager.restoreOrientation (saveName, timeSeconds, true);
@@ -473,10 +491,6 @@ $_M(c$, "getOrientation",
 function () {
 return this.stateManager.getOrientation ();
 });
-$_M(c$, "getSavedOrienationText", 
-function (name) {
-return this.stateManager.getSavedOrientationText (name);
-}, "~S");
 $_M(c$, "restoreModelOrientation", 
 function (modelIndex) {
 var o = this.modelSet.getModelOrientation (modelIndex);
@@ -610,11 +624,11 @@ function (rotationMatrix) {
 this.transformManager.setRotation (rotationMatrix);
 }, "J.util.Matrix3f");
 $_M(c$, "moveTo", 
-function (eval, floatSecondsTotal, center, rotAxis, degrees, rotationMatrix, zoom, xTrans, yTrans, rotationRadius, navCenter, xNav, yNav, navDepth) {
+function (eval, floatSecondsTotal, center, rotAxis, degrees, rotationMatrix, zoom, xTrans, yTrans, rotationRadius, navCenter, xNav, yNav, navDepth, cameraDepth, cameraX, cameraY) {
 if (!this.haveDisplay) floatSecondsTotal = 0;
 this.setTainted (true);
-this.transformManager.moveTo (eval, floatSecondsTotal, center, rotAxis, degrees, rotationMatrix, zoom, xTrans, yTrans, rotationRadius, navCenter, xNav, yNav, navDepth);
-}, "J.api.JmolScriptEvaluator,~N,J.util.P3,J.util.V3,~N,J.util.Matrix3f,~N,~N,~N,~N,J.util.P3,~N,~N,~N");
+this.transformManager.moveTo (eval, floatSecondsTotal, center, rotAxis, degrees, rotationMatrix, zoom, xTrans, yTrans, rotationRadius, navCenter, xNav, yNav, navDepth, cameraDepth, cameraX, cameraY);
+}, "J.api.JmolScriptEvaluator,~N,J.util.P3,J.util.V3,~N,J.util.Matrix3f,~N,~N,~N,~N,J.util.P3,~N,~N,~N,~N,~N,~N");
 $_M(c$, "moveUpdate", 
 function (floatSecondsTotal) {
 if (floatSecondsTotal > 0) this.requestRepaintAndWait ();
@@ -868,7 +882,7 @@ return this.transformManager.transformPoint (pointAngstroms);
 $_M(c$, "transformPtVib", 
 function (pointAngstroms, vibrationVector) {
 return this.transformManager.transformPointVib (pointAngstroms, vibrationVector);
-}, "J.util.P3,J.util.V3");
+}, "J.util.P3,J.util.Vibration");
 $_M(c$, "transformPtScr", 
 function (pointAngstroms, pointScreen) {
 this.transformManager.transformPointScr (pointAngstroms, pointScreen);
@@ -969,7 +983,7 @@ this.transformManager.setNavXYZ (Clazz.floatToInt (x), Clazz.floatToInt (y), Cla
 }, "~N,~N,~N");
 $_M(c$, "getOrientationText", 
 function (type, name) {
-return (name == null ? this.transformManager.getOrientationText (type) : this.stateManager.getSavedOrientationText (name));
+return (name == null && type != 1073742158 ? this.transformManager.getOrientationText (type) : this.stateManager.getSavedOrientationText (name));
 }, "~N,~S");
 $_M(c$, "getOrientationInfo", 
 function () {
@@ -1167,10 +1181,10 @@ function (bs, isGroup, addRemove, isQuiet) {
 if (isGroup) bs = this.getUndeletedGroupAtomBits (bs);
 this.selectionManager.select (bs, addRemove, isQuiet);
 this.shapeManager.setShapeSizeBs (1, 2147483647, null, null);
-}, "J.util.BS,~B,Boolean,~B");
+}, "J.util.BS,~B,~N,~B");
 Clazz.overrideMethod (c$, "setSelectionSet", 
 function (set) {
-this.select (set, false, null, true);
+this.select (set, false, 0, true);
 }, "J.util.BS");
 $_M(c$, "selectBonds", 
 function (bs) {
@@ -1181,7 +1195,7 @@ function (bs, isDisplay, isGroup, addRemove, isQuiet) {
 if (isGroup) bs = this.getUndeletedGroupAtomBits (bs);
 if (isDisplay) this.selectionManager.display (this.modelSet, bs, addRemove, isQuiet);
  else this.selectionManager.hide (this.modelSet, bs, addRemove, isQuiet);
-}, "J.util.BS,~B,~B,Boolean,~B");
+}, "J.util.BS,~B,~B,~N,~B");
 $_M(c$, "getUndeletedGroupAtomBits", 
 ($fz = function (bs) {
 bs = this.getAtomBits (1087373318, bs);
@@ -1214,6 +1228,11 @@ $_M(c$, "clearAtomSets",
 this.setSelectionSubset (null);
 this.definedAtomSets.clear ();
 }, $fz.isPrivate = true, $fz));
+$_M(c$, "getDefinedAtomSet", 
+function (name) {
+var o = this.definedAtomSets.get (name.toLowerCase ());
+return (Clazz.instanceOf (o, J.util.BS) ? o :  new J.util.BS ());
+}, "~S");
 Clazz.overrideMethod (c$, "selectAll", 
 function () {
 this.selectionManager.selectAll (false);
@@ -1346,7 +1365,10 @@ htParams.put ("stateScriptVersionInt", Integer.$valueOf (this.stateScriptVersion
 if (!htParams.containsKey ("filter")) {
 var filter = this.getDefaultLoadFilter ();
 if (filter.length > 0) htParams.put ("filter", filter);
-}if (isAppend && !this.global.appendNew && this.getAtomCount () > 0) htParams.put ("merging", Boolean.TRUE);
+}var merging = (isAppend && !this.global.appendNew && this.getAtomCount () > 0);
+htParams.put ("baseAtomIndex", Integer.$valueOf (isAppend ? this.getAtomCount () : 0));
+htParams.put ("baseModelIndex", Integer.$valueOf (this.getAtomCount () == 0 ? 0 : this.getModelCount () + (merging ? -1 : 0)));
+if (merging) htParams.put ("merging", Boolean.TRUE);
 return htParams;
 }, $fz.isPrivate = true, $fz), "java.util.Map,~B");
 Clazz.overrideMethod (c$, "openFileAsyncPDB", 
@@ -1535,7 +1557,7 @@ function (strModel, newLine, isAppend, htParams) {
 if (strModel == null || strModel.length == 0) return null;
 strModel = J.viewer.Viewer.fixInlineString (strModel, newLine);
 if (newLine.charCodeAt (0) != 0) J.util.Logger.info ("loading model inline, " + strModel.length + " bytes, with newLine character " + (newLine).charCodeAt (0) + " isAppend=" + isAppend);
-J.util.Logger.debug (strModel);
+if (J.util.Logger.debugging) J.util.Logger.debug (strModel);
 var datasep = this.getDataSeparator ();
 var i;
 if (datasep != null && datasep !== "" && (i = strModel.indexOf (datasep)) >= 0 && strModel.indexOf ("# Jmol state") < 0) {
@@ -1621,7 +1643,7 @@ this.pushHoldRepaintWhy ("createModelSet");
 this.setErrorMessage (null, null);
 try {
 var bsNew =  new J.util.BS ();
-this.modelSet = this.modelManager.createModelSet (fullPathName, fileName, loadScript, atomSetCollection, bsNew, isAppend);
+this.modelManager.createModelSet (fullPathName, fileName, loadScript, atomSetCollection, bsNew, isAppend);
 if (bsNew.cardinality () > 0) {
 var jmolScript = this.modelSet.getModelSetAuxiliaryInfoValue ("jmolscript");
 if (this.modelSet.getModelSetAuxiliaryInfoBoolean ("doMinimize")) this.minimize (2147483647, 0, bsNew, null, 0, true, true, true);
@@ -1660,7 +1682,7 @@ switch (tokType) {
 case 4166:
 this.setStatusFrameChanged (true);
 break;
-case 1649412112:
+case 1649412120:
 this.shapeManager.deleteVdwDependentShapes (null);
 break;
 }
@@ -1743,10 +1765,10 @@ this.fileManager.setFileInfo (fileInfo);
 $_M(c$, "autoCalculate", 
 function (tokProperty) {
 switch (tokProperty) {
-case 1112539149:
+case 1112539151:
 this.modelSet.getSurfaceDistanceMax ();
 break;
-case 1112539148:
+case 1112539150:
 this.modelSet.calculateStraightness ();
 break;
 }
@@ -1843,14 +1865,17 @@ this.selectionManager.clear ();
 this.clearAllMeasurements ();
 this.clearMinimization ();
 this.gdata.clear ();
-this.modelSet = this.modelManager.zap ();
+this.modelManager.zap ();
 if (this.scriptManager != null) this.scriptManager.clear (false);
+if (this.nmrCalculation != null) this.getNMRCalculation ().setChemicalShiftReference (null, 0);
 if (this.haveDisplay) {
 this.mouse.clear ();
 this.clearTimeouts ();
 this.actionManager.clear ();
 }this.stateManager.clear (this.global);
 this.tempArray.clear ();
+this.chainMap.clear ();
+this.chainList.clear ();
 this.colorManager.clear ();
 this.definedAtomSets.clear ();
 this.dataManager.clear ();
@@ -1863,10 +1888,11 @@ this.setStringProperty ("picking", "assignBond_p");
 }this.undoClear ();
 }System.gc ();
 } else {
-this.modelSet = this.modelManager.zap ();
+this.modelManager.zap ();
 }this.initializeModel (false);
-if (notify) this.setFileLoadStatus (J.constant.EnumFileStatus.ZAPPED, null, (resetUndo ? "resetUndo" : this.getZapName ()), null, null, null);
-if (J.util.Logger.debugging) J.util.Logger.checkMemory ();
+if (notify) {
+this.setFileLoadStatus (J.constant.EnumFileStatus.ZAPPED, null, (resetUndo ? "resetUndo" : this.getZapName ()), null, null, null);
+}if (J.util.Logger.debugging) J.util.Logger.checkMemory ();
 }, "~B,~B,~B");
 $_M(c$, "zapMsg", 
 ($fz = function (msg) {
@@ -1906,8 +1932,8 @@ this.finalizeTransformParameters ();
 }, $fz.isPrivate = true, $fz), "~B");
 $_M(c$, "startHoverWatcher", 
 function (tf) {
-if (!this.haveDisplay) return;
-if (this.hoverEnabled || !tf) this.actionManager.startHoverWatcher (tf);
+if (!this.haveDisplay || tf && (!this.hoverEnabled || this.animationManager.animationOn)) return;
+this.actionManager.startHoverWatcher (tf);
 }, "~B");
 Clazz.overrideMethod (c$, "getModelSetName", 
 function () {
@@ -2241,6 +2267,7 @@ pt.add (unitCell.getCartesianOffset ());
 $_M(c$, "setAtomData", 
 function (type, name, coordinateData, isDefault) {
 this.modelSet.setAtomData (type, name, coordinateData, isDefault);
+if (type == 2) this.checkCoordinatesChanged ();
 this.refreshMeasures (true);
 }, "~N,~S,~S,~B");
 Clazz.overrideMethod (c$, "setCenterSelected", 
@@ -2296,10 +2323,10 @@ function (min, max, intType, bs) {
 return this.modelSet.getAtomsConnected (min, max, intType, bs);
 }, "~N,~N,~N,J.util.BS");
 $_M(c$, "getBranchBitSet", 
-function (atomIndex, atomIndexNot) {
+function (atomIndex, atomIndexNot, allowCyclic) {
 if (atomIndex < 0 || atomIndex >= this.getAtomCount ()) return  new J.util.BS ();
-return J.util.JmolMolecule.getBranchBitSet (this.modelSet.atoms, atomIndex, this.getModelUndeletedAtomsBitSet (this.modelSet.atoms[atomIndex].modelIndex), null, atomIndexNot, true, true);
-}, "~N,~N");
+return J.util.JmolMolecule.getBranchBitSet (this.modelSet.atoms, atomIndex, this.getModelUndeletedAtomsBitSet (this.modelSet.atoms[atomIndex].modelIndex), null, atomIndexNot, allowCyclic, true);
+}, "~N,~N,~B");
 $_M(c$, "getAtomIndexFromAtomNumber", 
 function (atomNumber) {
 return this.modelSet.getAtomIndexFromAtomNumber (atomNumber, this.getVisibleFramesBitSet ());
@@ -2392,7 +2419,7 @@ $_M(c$, "setCurrentColorRange",
 function (label) {
 var data = this.getDataFloat (label);
 var bs = (data == null ? null : (this.dataManager.getData (label))[2]);
-if (bs != null && this.getBoolean (603979894)) bs.and (this.getSelectionSet (false));
+if (bs != null && this.getBoolean (603979895)) bs.and (this.getSelectionSet (false));
 this.setCurrentColorRangeData (data, bs);
 }, "~S");
 $_M(c$, "setCurrentColorRangeData", 
@@ -2728,24 +2755,19 @@ function (mode, strWhy) {
 if (this.repaintManager == null || !this.refreshing) return;
 if (mode == 6 && this.getInMotion (true)) return;
 {
-if (typeof Jmol == "undefined") return;
-if (!this.isWebGL) {
-if (mode == 7)return;
-if (mode > 0) this.repaintManager.repaintIfReady();
-} else if (mode == 2 || mode == 7) {
-this.transformManager.finalizeTransformParameters();
-if (Jmol._refresh)
-Jmol._refresh(this.applet, mode, strWhy,
+if (typeof Jmol == "undefined") return; if (!this.isWebGL) {
+if (mode == 7)return; if (mode > 0)
+this.repaintManager.repaintIfReady(); } else if (mode == 2 ||
+mode == 7) {
+this.transformManager.finalizeTransformParameters(); if
+(Jmol._refresh) Jmol._refresh(this.applet, mode, strWhy,
 [this.transformManager.fixedRotationCenter,
 this.transformManager.getRotationQuaternion(),
 this.transformManager.xTranslationFraction,
 this.transformManager.yTranslationFraction,
 this.transformManager.modelRadius,
 this.transformManager.scalePixelsPerAngstrom,
-this.transformManager.zoomPercent
-]);
-if (mode == 7)return;
-}
+this.transformManager.zoomPercent ]); if (mode == 7)return; }
 }if (mode % 3 != 0 && this.statusManager.doSync ()) this.statusManager.setSync (mode == 2 ? strWhy : null);
 }, "~N,~S");
 $_M(c$, "requestRepaintAndWait", 
@@ -2843,11 +2865,9 @@ $_M(c$, "updateJS",
 function (width, height) {
 {
 if (!this.isWebGL) {
-this.renderScreenImageStereo(this.apiPlatform.context, null, width, height);
-return;
-}
-if (this.updateWindow(width, height)){ this.render(); }
-this.notifyViewerRepaintDone();
+this.renderScreenImageStereo(this.apiPlatform.context, null,
+width, height); return; } if (this.updateWindow(width,
+height)){ this.render(); } this.notifyViewerRepaintDone();
 }}, "~N,~N");
 $_M(c$, "updateWindow", 
 ($fz = function (width, height) {
@@ -2868,7 +2888,7 @@ $_M(c$, "getImage",
 if (this.isWebGL)return null;
 }var image = null;
 try {
-this.gdata.beginRendering (this.transformManager.getStereoRotationMatrix (isDouble), isImageWrite);
+this.beginRendering (isDouble, isImageWrite);
 this.render ();
 this.gdata.endRendering ();
 image = this.gdata.getScreenImage (isImageWrite);
@@ -2882,6 +2902,10 @@ throw er;
 }
 }
 return image;
+}, $fz.isPrivate = true, $fz), "~B,~B");
+$_M(c$, "beginRendering", 
+($fz = function (isDouble, isImageWrite) {
+this.gdata.beginRendering (this.transformManager.getStereoRotationMatrix (isDouble), this.global.translucent, isImageWrite);
 }, $fz.isPrivate = true, $fz), "~B,~B");
 $_M(c$, "isAntialiased", 
 function () {
@@ -2919,11 +2943,11 @@ if (this.isWebGL)return null
 var mergeImages = (graphic == null && this.isStereoDouble ());
 var imageBuffer;
 if (this.transformManager.stereoMode.isBiColor ()) {
-this.gdata.beginRendering (this.transformManager.getStereoRotationMatrix (true), isImageWrite);
+this.beginRendering (true, isImageWrite);
 this.render ();
 this.gdata.endRendering ();
 this.gdata.snapshotAnaglyphChannelBytes ();
-this.gdata.beginRendering (this.transformManager.getStereoRotationMatrix (false), isImageWrite);
+this.beginRendering (false, isImageWrite);
 this.render ();
 this.gdata.endRendering ();
 this.gdata.applyAnaglygh (this.transformManager.stereoMode, this.transformManager.stereoColors);
@@ -3020,7 +3044,12 @@ return ret;
 }, $fz.isPrivate = true, $fz), "~S,~S,~S");
 $_M(c$, "evalStringWaitStatusQueued", 
 function (returnType, strScript, statusList, isScriptFile, isQuiet, isQueued) {
-if (this.getScriptManager () == null) return null;
+{
+if (strScript.indexOf("JSCONSOLE") == 0) {
+this.applet._showInfo(true);
+return null;
+}
+}if (this.getScriptManager () == null) return null;
 return this.scriptManager.evalStringWaitStatusQueued (returnType, strScript, statusList, isScriptFile, isQuiet, isQueued);
 }, "~S,~S,~S,~B,~B,~B");
 $_M(c$, "exitJmol", 
@@ -3036,7 +3065,7 @@ if (Clazz.exceptionOf (e, Exception)) {
 throw e;
 }
 }
-}J.util.Logger.debug ("exitJmol -- exiting");
+}if (J.util.Logger.debugging) J.util.Logger.debug ("exitJmol -- exiting");
 System.out.flush ();
 System.exit (0);
 });
@@ -3115,7 +3144,15 @@ return J.util.TextFormat.formatStringS (s, "FILE", f);
 case ':':
 format = this.global.pubChemFormat;
 var fl = f.toLowerCase ();
-var fi = J.util.Parser.parseInt (f);
+var fi = -2147483648;
+try {
+fi = Integer.parseInt (f);
+} catch (e) {
+if (Clazz.exceptionOf (e, Exception)) {
+} else {
+throw e;
+}
+}
 if (fi != -2147483648) {
 f = "cid/" + fi;
 } else {
@@ -3733,7 +3770,7 @@ return this.global.cartoonLadders;
 case 603979818:
 return this.global.cartoonRockets;
 case 603979822:
-return this.global.chainCaseSensitive;
+return this.global.chainCaseSensitive || this.chainList.size () > 0;
 case 603979824:
 return this.global.debugScript;
 case 603979825:
@@ -3780,23 +3817,25 @@ case 603979872:
 return this.global.justifyMeasurements;
 case 603979874:
 return this.global.legacyAutoBonding;
-case 603979876:
-return this.global.logGestures;
+case 603979875:
+return this.global.legacyHAddition;
 case 603979877:
-return this.global.measureAllModels;
+return this.global.logGestures;
 case 603979878:
-return this.global.measurementLabels;
+return this.global.measureAllModels;
 case 603979879:
+return this.global.measurementLabels;
+case 603979880:
 return this.global.messageStyleChime;
-case 603979882:
+case 603979883:
 return this.global.modelKitMode;
-case 603979886:
-return this.global.navigationMode;
 case 603979887:
-return this.global.navigationPeriodic;
+return this.global.navigationMode;
 case 603979888:
+return this.global.navigationPeriodic;
+case 603979889:
 return this.global.partialDots;
-case 603979891:
+case 603979892:
 return this.global.pdbSequential;
 case 603979898:
 return this.global.ribbonBorder;
@@ -3812,6 +3851,8 @@ case 603979926:
 return this.global.showMeasurements;
 case 603979928:
 return this.global.showMultipleBonds;
+case 603979934:
+return this.global.showTiming;
 case 603979938:
 return this.global.slabByAtom;
 case 603979940:
@@ -3824,8 +3865,10 @@ case 603979952:
 return this.global.ssbondsBackbone;
 case 603979955:
 return this.global.strutsMultiple;
-case 603979967:
+case 603979966:
 return this.global.traceAlpha;
+case 603979967:
+return this.global.translucent;
 case 603979968:
 return this.global.twistedSheets;
 case 603979973:
@@ -3869,6 +3912,8 @@ case 570425352:
 return this.global.defaultDrawArrowScale;
 case 570425356:
 return this.global.dipoleScale;
+case 570425358:
+return this.global.exportScale;
 case 570425360:
 return this.global.hbondsAngleMinimum;
 case 570425361:
@@ -3899,7 +3944,7 @@ case 570425406:
 return this.global.strutDefaultRadius;
 case 570425408:
 return this.global.strutLengthMaximum;
-case 1649410065:
+case 1649410049:
 return this.global.vectorScale;
 case 570425412:
 return this.global.vibrationPeriod;
@@ -4047,7 +4092,7 @@ case 545259561:
 this.global.helpPath = value;
 break;
 case 545259552:
-if (!value.equalsIgnoreCase ("RasMol")) value = "Jmol";
+if (!value.equalsIgnoreCase ("RasMol") && !value.equalsIgnoreCase ("PyMOL")) value = "Jmol";
 this.setDefaultsType (value);
 break;
 case 545259545:
@@ -4096,6 +4141,9 @@ this.setFloatPropertyTok (key, tok, value);
 $_M(c$, "setFloatPropertyTok", 
 ($fz = function (key, tok, value) {
 switch (tok) {
+case 570425358:
+this.global.exportScale = value;
+break;
 case 570425403:
 this.global.starScale = value;
 break;
@@ -4154,7 +4202,7 @@ break;
 case 570425384:
 this.global.pointGroupLinearTolerance = value;
 break;
-case 570425358:
+case 570425357:
 this.global.ellipsoidAxisDiameter = value;
 break;
 case 570425398:
@@ -4192,9 +4240,9 @@ case 570425372:
 this.transformManager.setNavigationSlabOffsetPercent (value);
 break;
 case 570425350:
-this.transformManager.setCameraDepthPercent (value);
+this.transformManager.setCameraDepthPercent (value, false);
 this.refresh (1, "set cameraDepth");
-break;
+return;
 case 570425388:
 this.setRotationRadius (value, true);
 return;
@@ -4211,7 +4259,7 @@ break;
 case 570425404:
 this.transformManager.setStereoDegrees (value);
 break;
-case 1649410065:
+case 1649410049:
 this.setVectorScale (value);
 return;
 case 570425412:
@@ -4422,7 +4470,7 @@ return;
 }var tok = J.script.T.getTokFromName (key);
 switch (J.script.T.getParamType (tok)) {
 case 545259520:
-this.setStringPropertyTok (key, tok, "" + value);
+this.setStringPropertyTok (key, tok, "");
 break;
 case 553648128:
 this.setIntPropertyTok (key, tok, value ? 1 : 0);
@@ -4438,6 +4486,12 @@ $_M(c$, "setBooleanPropertyTok",
 ($fz = function (key, tok, value) {
 var doRepaint = true;
 switch (tok) {
+case 603979837:
+this.global.ellipsoidArrows = value;
+break;
+case 603979967:
+this.global.translucent = value;
+break;
 case 603979820:
 this.global.cartoonLadders = value;
 break;
@@ -4462,7 +4516,7 @@ break;
 case 603979870:
 this.global.isosurfaceKey = value;
 break;
-case 603979888:
+case 603979889:
 this.global.partialDots = value;
 break;
 case 603979874:
@@ -4478,22 +4532,22 @@ case 603979782:
 this.global.allowModelkit = value;
 if (!value) this.setModelKitMode (false);
 break;
-case 603979882:
+case 603979883:
 this.setModelKitMode (value);
 break;
-case 603979884:
+case 603979885:
 this.global.multiProcessor = value && (J.viewer.Viewer.nProcessors > 1);
 break;
-case 603979883:
+case 603979884:
 this.global.monitorEnergy = value;
 break;
 case 603979853:
 this.global.hbondsRasmol = value;
 break;
-case 603979880:
+case 603979881:
 this.global.minimizationRefresh = value;
 break;
-case 603979881:
+case 603979882:
 this.global.minimizationSilent = value;
 break;
 case 603979969:
@@ -4508,16 +4562,16 @@ if (this.display != null) this.apiPlatform.setTransparentCursor (this.display);
 case 603979974:
 this.global.waitForMoveTo = value;
 break;
-case 603979875:
+case 603979876:
 this.global.logCommands = true;
 break;
-case 603979876:
+case 603979877:
 this.global.logGestures = true;
 break;
 case 603979784:
 this.global.allowMultiTouch = value;
 break;
-case 603979893:
+case 603979894:
 this.global.preserveState = value;
 this.modelSet.setPreserveState (value);
 this.undoClear ();
@@ -4569,31 +4623,31 @@ break;
 case 603979906:
 this.global.selectAllModels = value;
 break;
-case 603979879:
+case 603979880:
 this.global.messageStyleChime = value;
 break;
-case 603979891:
+case 603979892:
 this.global.pdbSequential = value;
 break;
-case 603979889:
+case 603979890:
 this.global.pdbAddHydrogens = value;
 break;
-case 603979890:
+case 603979891:
 this.global.pdbGetHeader = value;
 break;
-case 603979837:
+case 603979838:
 this.global.ellipsoidAxes = value;
 break;
 case 603979836:
 this.global.ellipsoidArcs = value;
 break;
-case 603979838:
+case 603979839:
 this.global.ellipsoidBall = value;
 break;
-case 603979839:
+case 603979840:
 this.global.ellipsoidDots = value;
 break;
-case 603979840:
+case 603979841:
 this.global.ellipsoidFill = value;
 break;
 case 603979845:
@@ -4670,7 +4724,7 @@ return;
 case 603979778:
 this.global.allowEmbeddedScripts = value;
 break;
-case 603979887:
+case 603979888:
 this.global.navigationPeriodic = value;
 break;
 case 603979984:
@@ -4679,10 +4733,10 @@ return;
 case 603979832:
 if (this.haveDisplay) this.global.drawHover = value;
 break;
-case 603979886:
+case 603979887:
 this.setNavigationMode (value);
 break;
-case 603979885:
+case 603979886:
 return;
 case 603979860:
 this.global.hideNavigationPoint = value;
@@ -4717,7 +4771,7 @@ return;
 case 603979864:
 this.global.highResolutionFlag = value;
 break;
-case 603979967:
+case 603979966:
 this.global.traceAlpha = value;
 break;
 case 603979983:
@@ -4773,7 +4827,7 @@ break;
 case 603979964:
 this.global.testFlag3 = value;
 break;
-case 603979966:
+case 603979965:
 this.jmolTest ();
 this.global.testFlag4 = value;
 break;
@@ -4792,7 +4846,7 @@ break;
 case 603979850:
 this.gdata.setGreyscaleMode (this.global.greyscaleRendering = value);
 break;
-case 603979878:
+case 603979879:
 this.global.measurementLabels = value;
 break;
 case 603979810:
@@ -4813,7 +4867,7 @@ return;
 case 603979824:
 this.setDebugScript (value);
 return;
-case 603979892:
+case 603979893:
 this.setPerspectiveDepth (value);
 return;
 case 603979798:
@@ -4843,11 +4897,11 @@ doRepaint = false;
 this.global.zeroBasedXyzRasmol = value;
 this.reset (true);
 break;
-case 603979894:
+case 603979895:
 doRepaint = false;
 this.global.rangeSelected = value;
 break;
-case 603979877:
+case 603979878:
 doRepaint = false;
 this.global.measureAllModels = value;
 break;
@@ -4935,7 +4989,7 @@ if (ifNotSet || sv.indexOf ("<not defined>") < 0) this.showString (key + " = " +
 }, "~S,~B,~N");
 $_M(c$, "showString", 
 function (str, isPrint) {
-if (this.isScriptQueued () && (!this.isSilent || isPrint) && !this.isJS) J.util.Logger.warn (str);
+if (this.isScriptQueued () && (!this.isSilent || isPrint) && !this.$isJS) J.util.Logger.warn (str);
 this.scriptEcho (str);
 }, "~S,~B");
 $_M(c$, "getAllSettings", 
@@ -4980,7 +5034,6 @@ return false;
 }, "~N");
 Clazz.overrideMethod (c$, "setPerspectiveDepth", 
 function (perspectiveDepth) {
-this.global.setB ("perspectiveDepth", perspectiveDepth);
 this.transformManager.setPerspectiveDepth (perspectiveDepth);
 }, "~B");
 Clazz.overrideMethod (c$, "setAxesOrientationRasmol", 
@@ -5072,8 +5125,8 @@ this.transformManager.setNavigationMode (TF);
 }, $fz.isPrivate = true, $fz), "~B");
 $_M(c$, "setTransformManagerDefaults", 
 ($fz = function () {
-this.transformManager.setCameraDepthPercent (this.global.cameraDepth);
-this.transformManager.setPerspectiveDepth (this.global.perspectiveDepth);
+this.transformManager.setCameraDepthPercent (this.global.defaultCameraDepth, true);
+this.transformManager.setPerspectiveDepth (this.global.defaultPerspectiveDepth);
 this.transformManager.setStereoDegrees (-5);
 this.transformManager.setVisualRange (this.global.visualRange);
 this.transformManager.setSpinOff ();
@@ -5083,6 +5136,10 @@ this.transformManager.setFrameOffsets (this.frameOffsets);
 $_M(c$, "getCameraFactors", 
 function () {
 return this.transformManager.getCameraFactors ();
+});
+$_M(c$, "getCameraDepth", 
+function () {
+return this.transformManager.getCameraDepth ();
 });
 $_M(c$, "getLoadState", 
 function (htParams) {
@@ -5190,7 +5247,7 @@ this.setObjectMad (35, "frank", (TF ? 1 : 0));
 $_M(c$, "getShowFrank", 
 function () {
 if (this.$isPreviewOnly || this.$isApplet && this.creatingImage) return false;
-return (!this.isJS && this.$isSignedApplet && !this.isSignedAppletLocal || this.frankOn);
+return (!this.$isJS && this.$isSignedApplet && !this.isSignedAppletLocal || this.frankOn);
 });
 $_M(c$, "isSignedApplet", 
 function () {
@@ -5233,6 +5290,9 @@ $_M(c$, "setDefaultsType",
 ($fz = function (type) {
 if (type.equalsIgnoreCase ("RasMol")) {
 this.stateManager.setRasMolDefaults ();
+return;
+}if (type.equalsIgnoreCase ("PyMOL")) {
+this.stateManager.setPyMOLDefaults ();
 return;
 }this.setDefaults ();
 }, $fz.isPrivate = true, $fz), "~S");
@@ -5352,17 +5412,9 @@ Clazz.overrideMethod (c$, "getAtomArgb",
 function (i) {
 return this.gdata.getColorArgbOrGray (this.modelSet.getAtomColix (i));
 }, "~N");
-$_M(c$, "getAtomChain", 
-function (i) {
-return this.modelSet.getAtomChain (i);
-}, "~N");
 Clazz.overrideMethod (c$, "getAtomModelIndex", 
 function (i) {
 return this.modelSet.atoms[i].modelIndex;
-}, "~N");
-$_M(c$, "getAtomSequenceCode", 
-function (i) {
-return this.modelSet.atoms[i].getSeqcodeString ();
 }, "~N");
 Clazz.overrideMethod (c$, "getBondRadius", 
 function (i) {
@@ -5409,7 +5461,7 @@ return this.transformManager.stereoMode === J.constant.EnumStereoMode.DOUBLE;
 });
 Clazz.overrideMethod (c$, "getOperatingSystemName", 
 function () {
-return J.viewer.Viewer.strOSName + (!this.isJS ? "" : this.isWebGL ? "(WebGL)" : "(HTML5)");
+return J.viewer.Viewer.strOSName + (!this.$isJS ? "" : this.isWebGL ? "(WebGL)" : "(HTML5)");
 });
 Clazz.overrideMethod (c$, "getJavaVendor", 
 function () {
@@ -5447,11 +5499,9 @@ this.appConsole = null;
 } else if (this.appConsole == null && paramInfo != null && (paramInfo).booleanValue ()) {
 {
 this.appConsole = J.api.Interface
-.getOptionInterface("consolejs.AppletConsole");
-if (this.appConsole != null) {
-this.appConsole.start(this);
-return this.appConsole;
-}
+.getOptionInterface("consolejs.AppletConsole"); if
+(this.appConsole != null) { this.appConsole.start(this);
+return this.appConsole; }
 }if (this.appConsole != null) this.appConsole.start (this);
 }this.scriptEditor = (this.appConsole == null ? null : this.appConsole.getScriptEditor ());
 return this.appConsole;
@@ -5534,18 +5584,18 @@ if (isOK) this.refresh (-1, "rotateAxisAngleAtCenter");
 return isOK;
 }, "J.api.JmolScriptEvaluator,J.util.P3,J.util.V3,~N,~N,~B,J.util.BS");
 $_M(c$, "rotateAboutPointsInternal", 
-function (eval, point1, point2, degreesPerSecond, endDegrees, isSpin, bsSelected, translation, finalPoints) {
-var isOK = this.transformManager.rotateAboutPointsInternal (eval, point1, point2, degreesPerSecond, endDegrees, false, isSpin, bsSelected, false, translation, finalPoints);
+function (eval, point1, point2, degreesPerSecond, endDegrees, isSpin, bsSelected, translation, finalPoints, dihedralList) {
+var isOK = this.transformManager.rotateAboutPointsInternal (eval, point1, point2, degreesPerSecond, endDegrees, false, isSpin, bsSelected, false, translation, finalPoints, dihedralList);
 if (isOK) this.refresh (-1, "rotateAxisAboutPointsInternal");
 return isOK;
-}, "J.api.JmolScriptEvaluator,J.util.P3,J.util.P3,~N,~N,~B,J.util.BS,J.util.V3,J.util.JmolList");
+}, "J.api.JmolScriptEvaluator,J.util.P3,J.util.P3,~N,~N,~B,J.util.BS,J.util.V3,J.util.JmolList,~A");
 $_M(c$, "startSpinningAxis", 
 function (pt1, pt2, isClockwise) {
 if (this.getSpinOn () || this.getNavOn ()) {
 this.setSpinOn (false);
 this.setNavOn (false);
 return;
-}this.transformManager.rotateAboutPointsInternal (null, pt1, pt2, this.global.pickingSpinRate, 3.4028235E38, isClockwise, true, null, false, null, null);
+}this.transformManager.rotateAboutPointsInternal (null, pt1, pt2, this.global.pickingSpinRate, 3.4028235E38, isClockwise, true, null, false, null, null, null);
 }, "J.util.P3,J.util.P3,~B");
 $_M(c$, "getModelDipole", 
 function () {
@@ -5641,7 +5691,7 @@ return this.modelSet.getJmolDataSourceFrame (modelIndex);
 }, "~N");
 $_M(c$, "setAtomProperty", 
 function (bs, tok, iValue, fValue, sValue, values, list) {
-if (tok == 1649412112) this.shapeManager.deleteVdwDependentShapes (bs);
+if (tok == 1649412120) this.shapeManager.deleteVdwDependentShapes (bs);
 this.clearMinimization ();
 this.modelSet.setAtomProperty (bs, tok, iValue, fValue, sValue, values, list);
 switch (tok) {
@@ -5651,9 +5701,9 @@ case 1112541187:
 case 1112541188:
 case 1112541189:
 case 1112541190:
-case 1112539151:
-case 1112539152:
 case 1112539153:
+case 1112539154:
+case 1112539155:
 case 1087375365:
 this.refreshMeasures (true);
 }
@@ -5803,7 +5853,7 @@ var a = atom1;
 atom1 = atom2;
 atom2 = a;
 }if (J.util.Measure.computeAngleABC (pt, atom1, atom2, true) > 90 || J.util.Measure.computeAngleABC (pt, atom2, atom1, true) > 90) {
-bsBranch = this.getBranchBitSet (atom2.index, atom1.index);
+bsBranch = this.getBranchBitSet (atom2.index, atom1.index, true);
 }if (bsBranch != null) for (var n = 0, i = atom1.getBonds ().length; --i >= 0; ) {
 if (bsBranch.get (atom1.getBondedAtomIndex (i)) && ++n == 2) {
 bsBranch = null;
@@ -5823,7 +5873,7 @@ v1.cross (v1, v2);
 var degrees = (v1.z > 0 ? 1 : -1) * v2.length ();
 var bs = J.util.BSUtil.copy (bsBranch);
 bs.andNot (this.selectionManager.getMotionFixedAtoms ());
-this.rotateAboutPointsInternal (this.eval, atom1, atom2, 0, degrees, false, bs, null, null);
+this.rotateAboutPointsInternal (this.eval, atom1, atom2, 0, degrees, false, bs, null, null, null);
 }, "~N,~N,~N,~N");
 $_M(c$, "refreshMeasures", 
 function (andStopMinimization) {
@@ -5955,7 +6005,7 @@ return this.getStateCreator ().createImagePathCheck (fileName, type, text, bytes
 }, "~S,~S,~S,~A,~N,~N,~N");
 $_M(c$, "getImageCreator", 
 function () {
-return (J.api.Interface.getOptionInterface (this.isJS && !this.isWebGL ? "exportjs.JSImageCreator" : "export.image.AwtImageCreator")).setViewer (this, this.privateKey);
+return (J.api.Interface.getOptionInterface (this.$isJS && !this.isWebGL ? "exportjs.JSImageCreator" : "export.image.AwtImageCreator")).setViewer (this, this.privateKey);
 });
 $_M(c$, "setSyncTarget", 
 ($fz = function (mode, TF) {
@@ -6012,21 +6062,21 @@ Clazz.overrideMethod (c$, "getBondPoint3f2",
 function (i) {
 return this.modelSet.getBondAtom2 (i);
 }, "~N");
-$_M(c$, "getVibrationVector", 
+$_M(c$, "getVibration", 
 function (atomIndex) {
-return this.modelSet.getVibrationVector (atomIndex, false);
+return this.modelSet.getVibration (atomIndex, false);
 }, "~N");
 $_M(c$, "getVanderwaalsMar", 
 function (i) {
 return (this.dataManager.defaultVdw === J.constant.EnumVdw.USER ? this.dataManager.userVdwMars[i] : J.util.Elements.getVanderwaalsMar (i, this.dataManager.defaultVdw));
 }, "~N");
 $_M(c$, "getVanderwaalsMarType", 
-function (i, type) {
+function (atomicAndIsotopeNumber, type) {
 if (type == null) type = this.dataManager.defaultVdw;
  else switch (type) {
 case J.constant.EnumVdw.USER:
 if (this.dataManager.bsUserVdws == null) type = this.dataManager.defaultVdw;
- else return this.dataManager.userVdwMars[i];
+ else return this.dataManager.userVdwMars[atomicAndIsotopeNumber & 127];
 break;
 case J.constant.EnumVdw.AUTO:
 case J.constant.EnumVdw.JMOL:
@@ -6035,7 +6085,7 @@ case J.constant.EnumVdw.RASMOL:
 if (this.dataManager.defaultVdw !== J.constant.EnumVdw.AUTO) type = this.dataManager.defaultVdw;
 break;
 }
-return (J.util.Elements.getVanderwaalsMar (i, type));
+return (J.util.Elements.getVanderwaalsMar (atomicAndIsotopeNumber, type));
 }, "~N,J.constant.EnumVdw");
 $_M(c$, "setDefaultVdw", 
 function (type) {
@@ -6169,6 +6219,7 @@ this.setCursor (0);
 this.setBooleanProperty ("refreshing", true);
 this.fileManager.setPathForAllFiles ("");
 J.util.Logger.error ("viewer handling error condition: " + er + "  ");
+if (!this.$isJS) er.printStackTrace ();
 this.notifyError ("Error", "doClear=" + doClear + "; " + er, "" + er);
 } catch (e1) {
 try {
@@ -6677,6 +6728,7 @@ if (minor == -2147483648) minor = 0;
 if (main != -2147483648 && sub != -2147483648) {
 this.stateScriptVersionInt = main * 10000 + sub * 100 + minor;
 this.global.legacyAutoBonding = (this.stateScriptVersionInt < 110924);
+this.global.legacyHAddition = (this.stateScriptVersionInt < 130117);
 return;
 }} catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
@@ -6746,7 +6798,7 @@ function (group3) {
 if (this.htPdbBondInfo == null) this.htPdbBondInfo =  new java.util.Hashtable ();
 var info = this.htPdbBondInfo.get (group3);
 if (info != null) return info;
-info = J.viewer.JC.getPdbBondInfo (J.modelset.Group.lookupGroupID (group3));
+info = J.viewer.JC.getPdbBondInfo (J.modelset.Group.lookupGroupID (group3), this.global.legacyHAddition);
 this.htPdbBondInfo.put (group3, info);
 return info;
 }, "~S");
@@ -6823,6 +6875,7 @@ this.getMinimizer (true).calculatePartialCharges (this.modelSet.bonds, this.mode
 }, "J.util.BS");
 $_M(c$, "cachePut", 
 function (key, data) {
+J.util.Logger.info ("Viewer cachePut " + key);
 this.fileManager.cachePut (key, data);
 }, "~S,~O");
 $_M(c$, "cacheGet", 
@@ -6832,7 +6885,6 @@ return this.fileManager.cacheGet (key, false);
 $_M(c$, "cacheClear", 
 function () {
 this.fileManager.cacheClear ();
-this.fileManager.clearPngjCache (null);
 });
 $_M(c$, "setCurrentModelID", 
 function (id) {
@@ -6840,9 +6892,9 @@ var modelIndex = this.getCurrentModelIndex ();
 if (modelIndex >= 0) this.modelSet.setModelAuxiliaryInfo (modelIndex, "modelID", id);
 }, "~S");
 $_M(c$, "setCentroid", 
-function (iAtom0, iAtom1, minmax) {
-this.modelSet.setCentroid (iAtom0, iAtom1, minmax);
-}, "~N,~N,~A");
+function (bs, minmax) {
+this.modelSet.setCentroid (bs, minmax);
+}, "J.util.BS,~A");
 $_M(c$, "getPathForAllFiles", 
 function () {
 return this.fileManager.getPathForAllFiles ();
@@ -6883,7 +6935,7 @@ this.setAnimationOn (false);
 });
 $_M(c$, "getEvalContextAndHoldQueue", 
 function (jse) {
-if (jse == null || !this.isJS) return null;
+if (jse == null || !this.$isJS) return null;
 jse.pushContextDown ();
 var sc = jse.getThisContext ();
 var sc0 = sc;
@@ -6915,9 +6967,9 @@ function (atomShape, shape, monomerCount, monomers, bsSizeDefault, temp, temp2) 
 this.getStateCreator ().getShapeSetState (atomShape, shape, monomerCount, monomers, bsSizeDefault, temp, temp2);
 }, "J.shape.AtomShape,J.shape.Shape,~N,~A,J.util.BS,java.util.Map,java.util.Map");
 $_M(c$, "getMeasurementState", 
-function (as, mList, measurementCount, font3d, ti) {
-return this.getStateCreator ().getMeasurementState (as, mList, measurementCount, font3d, ti);
-}, "J.shape.AtomShape,J.util.JmolList,~N,J.util.JmolFont,J.modelset.TickInfo");
+function (measures, mList, measurementCount, font3d, ti) {
+return this.getStateCreator ().getMeasurementState (measures, mList, measurementCount, font3d, ti);
+}, "J.shape.Measures,J.util.JmolList,~N,J.util.JmolFont,J.modelset.TickInfo");
 $_M(c$, "getBondState", 
 function (shape, bsOrderSet, reportAll) {
 return this.getStateCreator ().getBondState (shape, bsOrderSet, reportAll);
@@ -7040,6 +7092,93 @@ $_M(c$, "setFrame",
 function (i) {
 this.animationManager.setFrame (i - 1);
 }, "~N");
+$_M(c$, "movePyMOL", 
+function (eval, floatSecondsTotal, pymolView) {
+this.transformManager.moveToPyMOL (eval, floatSecondsTotal, pymolView);
+return true;
+}, "J.api.JmolScriptEvaluator,~N,~A");
+$_M(c$, "getCamera", 
+function () {
+return this.transformManager.camera;
+});
+$_M(c$, "setModelSet", 
+function (modelSet) {
+this.modelSet = this.modelManager.modelSet = modelSet;
+}, "J.modelset.ModelSet");
+$_M(c$, "setObjectProp", 
+function (id, tokCommand) {
+this.getScriptManager ();
+if (id == null) id = "*";
+return (this.eval == null ? null : this.eval.setObjectPropSafe (id, tokCommand, -1));
+}, "~S,~N");
+$_M(c$, "getSceneList", 
+function () {
+try {
+return this.getModelSetAuxiliaryInfoValue ("scenes");
+} catch (e) {
+if (Clazz.exceptionOf (e, Exception)) {
+return null;
+} else {
+throw e;
+}
+}
+});
+$_M(c$, "setBondParameters", 
+function (modelIndex, i, bsBonds, rad, pymolValence, argb, trans) {
+this.modelSet.setBondParametersBS (modelIndex, i, bsBonds, rad, pymolValence, argb, trans);
+}, "~N,~N,J.util.BS,~N,~N,~N,~N");
+$_M(c$, "getDihedralMap", 
+function (atoms) {
+return this.modelSet.getDihedralMap (atoms);
+}, "~A");
+$_M(c$, "setDihedrals", 
+function (dihedralList, bsBranches, rate) {
+this.modelSet.setDihedrals (dihedralList, bsBranches, rate);
+}, "~A,~A,~N");
+$_M(c$, "getBsBranches", 
+function (dihedralList) {
+return this.modelSet.getBsBranches (dihedralList);
+}, "~A");
+$_M(c$, "getChainID", 
+function (id) {
+var iboxed = this.chainMap.get (id);
+if (iboxed != null) return iboxed.intValue ();
+var i = id.charCodeAt (0);
+if (id.length > 1) {
+i = 256 + this.chainList.size ();
+this.chainList.addLast (id);
+}iboxed = Integer.$valueOf (i);
+this.chainMap.put (iboxed, id);
+this.chainMap.put (id, iboxed);
+return i;
+}, "~S");
+$_M(c$, "getChainIDStr", 
+function (id) {
+return this.chainMap.get (Integer.$valueOf (id));
+}, "~N");
+$_M(c$, "getScriptQueueInfo", 
+function () {
+return (this.scriptManager != null && this.scriptManager.isQueueProcessing () ? Boolean.TRUE : Boolean.FALSE);
+});
+$_M(c$, "getNMRCalculation", 
+function () {
+return (this.nmrCalculation == null ? (this.nmrCalculation = J.api.Interface.getOptionInterface ("quantum.NMRCalculation")).setViewer (this) : this.nmrCalculation);
+});
+$_M(c$, "getDistanceUnits", 
+function (s) {
+if (s == null) s = this.getDefaultMeasurementLabel (2);
+var pt = s.indexOf ("//");
+return (pt < 0 ? this.getMeasureDistanceUnits () : s.substring (pt + 2));
+}, "~S");
+$_M(c$, "calculateFormalCharges", 
+function (bs) {
+if (bs == null) bs = this.getSelectionSet (false);
+return this.modelSet.fixFormalCharges (bs);
+}, "J.util.BS");
+$_M(c$, "cachePngFiles", 
+function () {
+return (!this.getTestFlag (1));
+});
 Clazz.pu$h ();
 c$ = Clazz.declareType (J.viewer.Viewer, "ACCESS", Enum);
 Clazz.defineEnumConstant (c$, "NONE", 0, []);

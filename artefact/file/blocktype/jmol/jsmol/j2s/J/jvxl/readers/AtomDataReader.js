@@ -55,9 +55,9 @@ Clazz.makeConstructor (c$,
 function () {
 Clazz.superConstructor (this, J.jvxl.readers.AtomDataReader, []);
 });
-$_M(c$, "init", 
+$_M(c$, "initADR", 
 function (sg) {
-Clazz.superCall (this, J.jvxl.readers.AtomDataReader, "init", [sg]);
+this.initVDR (sg);
 this.precalculateVoxelData = true;
 this.atomDataServer = sg.getAtomDataServer ();
 }, "J.jvxl.readers.SurfaceGenerator");
@@ -244,6 +244,10 @@ this.setVolumeData ();
 J.jvxl.data.JvxlCoder.jvxlCreateHeader (this.volumeData, this.jvxlFileHeaderBuffer);
 }, "~N,~N,~N");
 Clazz.overrideMethod (c$, "setVolumeData", 
+function () {
+this.setVolumeDataADR ();
+});
+$_M(c$, "setVolumeDataADR", 
 function () {
 if (!this.setVolumeDataParams ()) {
 this.setVoxelRange (0, this.xyzMin.x, this.xyzMax.x, this.ptsPerAngstrom, this.maxGrid, this.minPtsPerAng);

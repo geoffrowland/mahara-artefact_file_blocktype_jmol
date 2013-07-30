@@ -25,7 +25,7 @@ Jmol.Console.JSConsole = function(appletConsole) {
 
 	// create and insert HTML code here
 
-	var s = '<div id="$ID" class="jmolConsole" style="display:block;background-color:yellow;width:600px;height:330px;position:absolute;z-order:9999"><div id=$ID_title></id><div id=$ID_label1></div><div id=$ID_outputdiv></div><div id=$ID_inputdiv></div><div id=$ID_buttondiv></div></div>'
+	var s = '<div id="$ID" class="jmolConsole" style="display:block;background-color:yellow;width:600px;height:362px;position:absolute;z-order:9999"><div id=$ID_title></div><div id=$ID_label1></div><div id=$ID_outputdiv style="position:relative;left:2px"></div><div id=$ID_inputdiv style="position:relative;left:2px"></div><div id=$ID_buttondiv></div></div>'
 
 	var setBtn = function(console, btn) {
 		btn.console = console;
@@ -69,7 +69,7 @@ Jmol.Console.JSConsole = function(appletConsole) {
 	}
 	
 	console.setTitle = function(title) {
-		$("#" + this.id + "_title").html(title);
+		//$("#" + this.id + "_title").html(title);
 	}
 }
 
@@ -593,7 +593,10 @@ this.jsConsole = new Jmol.Console.JSConsole(this);
 }, "~S");
 Clazz.overrideMethod (c$, "setTitle", 
 function () {
-});
+{
+if (this.jsConsole)
+this.jsConsole.setTitle(this.getLabel("title"));
+}});
 Clazz.overrideMethod (c$, "setVisible", 
 function (visible) {
 {

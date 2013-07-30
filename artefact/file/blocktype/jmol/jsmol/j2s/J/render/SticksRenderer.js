@@ -58,13 +58,13 @@ if (!this.isPass2) this.bsForPass2.clearAll ();
 this.slabbing = this.viewer.getSlabEnabled ();
 this.slabByAtom = this.viewer.getBoolean (603979938);
 this.endcaps = 3;
-this.dashDots = (this.viewer.getBoolean (603979888) ? J.render.FontLineShapeRenderer.sixdots : J.render.FontLineShapeRenderer.dashes);
+this.dashDots = (this.viewer.getBoolean (603979889) ? J.render.FontLineShapeRenderer.sixdots : J.render.FontLineShapeRenderer.dashes);
 this.multipleBondSpacing = this.viewer.getFloat (570425369);
 this.isCartesianExport = (this.exportType == 1);
 if (this.multipleBondSpacing == 0 && this.isCartesianExport) this.multipleBondSpacing = 0.2;
 this.multipleBondRadiusFactor = this.viewer.getFloat (570425368);
-this.showMultipleBonds = this.multipleBondSpacing != 0 && this.viewer.getBoolean (603979928);
 this.modeMultipleBond = this.viewer.getModeMultipleBond ();
+this.showMultipleBonds = (this.multipleBondSpacing != 0 && this.modeMultipleBond != 0 && this.viewer.getBoolean (603979928));
 this.renderWireframe = this.viewer.getInMotion (true) && this.viewer.getBoolean (603979976);
 this.ssbondsBackbone = this.viewer.getBoolean (603979952);
 this.hbondsBackbone = this.viewer.getBoolean (603979852);
@@ -128,7 +128,7 @@ return true;
 if ((this.bondOrder & 224) == 0) {
 if ((this.bondOrder & 256) != 0) this.bondOrder &= -257;
 if ((this.bondOrder & 1023) != 0) {
-if (!this.showMultipleBonds || this.modeMultipleBond == 0 || (this.modeMultipleBond == 2 && this.mad > 500)) {
+if (!this.showMultipleBonds || (this.modeMultipleBond == 2 && this.mad > 500) || (this.bondOrder & 65536) != 0) {
 this.bondOrder = 1;
 }}}var mask = 0;
 switch (this.bondOrder) {

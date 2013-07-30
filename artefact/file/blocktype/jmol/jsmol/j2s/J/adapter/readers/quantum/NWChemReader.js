@@ -54,7 +54,7 @@ if (!this.doGetModel (++this.modelNumber, null)) return this.checkLastModel ();
 this.equivalentAtomSets++;
 this.readAtoms ();
 return true;
-}if (this.line.indexOf ("NWChem Nuclear Hessian and Frequency Analysis") >= 0) {
+}if (this.line.indexOf ("Vibrational analysis") >= 0) {
 this.readFrequencies ();
 return true;
 }if (!this.doProcessLines) return true;
@@ -96,7 +96,7 @@ $_M(c$, "setEnergies",
 this.energyKey = key;
 this.energyValue = value;
 this.atomSetCollection.setAtomSetPropertyForSets (this.energyKey, this.energyValue, this.equivalentAtomSets);
-this.atomSetCollection.setAtomSetNames (this.energyKey + " = " + this.energyValue, this.equivalentAtomSets);
+this.atomSetCollection.setAtomSetNames (this.energyKey + " = " + this.energyValue, this.equivalentAtomSets, null);
 this.atomSetCollection.setAtomSetEnergy (value, this.parseFloatStr (value));
 this.haveEnergy = true;
 }, $fz.isPrivate = true, $fz), "~S,~S,~N");
@@ -174,7 +174,7 @@ if (tokens.length < 8) break;
 var atom = this.atomSetCollection.addNewAtom ();
 atom.atomName = this.fixTag (tokens[1]);
 this.setAtomCoordXYZ (atom, this.parseFloatStr (tokens[2]) * 0.5291772, this.parseFloatStr (tokens[3]) * 0.5291772, this.parseFloatStr (tokens[4]) * 0.5291772);
-this.atomSetCollection.addVibrationVector (atom.atomIndex, -this.parseFloatStr (tokens[5]), -this.parseFloatStr (tokens[6]), -this.parseFloatStr (tokens[7]));
+this.atomSetCollection.addVibrationVector (atom.index, -this.parseFloatStr (tokens[5]), -this.parseFloatStr (tokens[6]), -this.parseFloatStr (tokens[7]));
 }
 }, $fz.isPrivate = true, $fz));
 $_M(c$, "readFrequencies", 
@@ -334,6 +334,7 @@ this.gaussianCount += nGaussians;
 this.gaussians = J.util.ArrayUtil.newFloat2 (this.gaussianCount);
 for (var i = 0; i < this.gaussianCount; i++) this.gaussians[i] = gdata.get (i);
 
+J.util.Logger.info (this.gaussianCount + " Gaussians read");
 return true;
 }, $fz.isPrivate = true, $fz));
 $_M(c$, "readMolecularOrbitalAnalysis", 
@@ -360,12 +361,11 @@ var tokens = this.getTokens ();
 var iMo = this.parseIntStr (tokens[1]);
 var occupancy = this.parseFloatStr (tokens[3]);
 var energy = this.parseFloatStr (tokens[5]);
-var symmetry = tokens[7];
-this.readLines (3);
+var symmetry = (tokens.length > 7 ? tokens[7] : null);
 var mo =  new java.util.Hashtable ();
 mo.put ("occupancy", Float.$valueOf (occupancy));
 mo.put ("energy", Float.$valueOf (energy));
-mo.put ("symmetry", symmetry);
+if (symmetry != null) mo.put ("symmetry", symmetry);
 var coefs = null;
 if (this.readROHFonly) {
 this.setMO (mo);
@@ -374,7 +374,8 @@ coefs =  Clazz.newFloatArray (this.nBasisFunctions, 0);
 mo.put ("coefficients", coefs);
 } else {
 this.moInfo.put (Integer.$valueOf (isBeta ? -iMo : iMo), mo);
-}while (this.readLine () != null && this.line.length > 3) {
+}this.readLines (3);
+while (this.readLine () != null && this.line.length > 3) {
 if (this.readROHFonly) {
 tokens = this.getTokens ();
 coefs[this.parseIntStr (tokens[0]) - 1] = this.parseFloatStr (tokens[1]);
@@ -443,15 +444,15 @@ this.energyUnits = "a.u.";
 this.setMOData (false);
 return true;
 }, $fz.isPrivate = true, $fz));
-$_M(c$, "readLine", 
+Clazz.overrideMethod (c$, "readLine", 
 function () {
-Clazz.superCall (this, J.adapter.readers.quantum.NWChemReader, "readLine", []);
+this.RL ();
 if (!this.purging && this.line != null && this.line.startsWith ("--")) {
 this.purging = true;
 this.discardLinesUntilStartsWith ("*");
 this.readLine ();
 this.purging = false;
-Clazz.superCall (this, J.adapter.readers.quantum.NWChemReader, "readLine", []);
+this.RL ();
 }return this.line;
 });
 Clazz.defineStatics (c$,

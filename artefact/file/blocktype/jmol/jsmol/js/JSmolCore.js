@@ -1255,9 +1255,8 @@ Jmol = (function(document) {
 			var xym = Jmol._jsGetXY(canvas, ev);
 			if(!xym)
         return false;
-			
 			if (ev.button != 2 && canvas.applet._popups)
-				Jmol.Menu.hidePopups(canvas.applet.popups);
+				Jmol.Menu.hidePopups(canvas.applet._popups);
 
 			canvas.applet._processEvent(501, xym); //J.api.Event.MOUSE_DOWN
 			return false;

@@ -12,9 +12,10 @@ this.measurementCount = 0;
 this.measurements = null;
 this.measurementPending = null;
 this.colix = 0;
-this.font3d = null;
 this.tickInfo = null;
 this.defaultTickInfo = null;
+this.font3d = null;
+this.htMin = null;
 this.tokAction = 0;
 Clazz.instantialize (this, arguments);
 }, J.shape, "Measures", J.shape.AtomShape, J.api.JmolMeasurementClient);
@@ -74,7 +75,7 @@ this.bsSelected.or (bs);
 }if ("setFormats" === propertyName) {
 this.setFormats (value);
 return;
-}this.measureAllModels = this.viewer.getBoolean (603979877);
+}this.measureAllModels = this.viewer.getBoolean (603979878);
 if ("delete" === propertyName) {
 this.deleteO (value);
 this.setIndices ();
@@ -96,7 +97,16 @@ this.tickInfo = md.tickInfo;
 if (md.tickInfo != null && md.tickInfo.id.equals ("default")) {
 this.defaultTickInfo = md.tickInfo;
 return;
-}this.radiusData = md.radiusData;
+}if (md.isAll && md.points.size () == 2 && Clazz.instanceOf (md.points.get (0), J.util.BS)) {
+var type = J.modelset.Measurement.nmrType (this.viewer.getDistanceUnits (md.strFormat));
+switch (type) {
+case 2:
+case 1:
+md.htMin = this.viewer.getNMRCalculation ().getMinDistances (md);
+}
+}this.tickInfo = md.tickInfo;
+this.radiusData = md.radiusData;
+this.htMin = md.htMin;
 this.mustBeConnected = md.mustBeConnected;
 this.mustNotBeConnected = md.mustNotBeConnected;
 this.intramolecular = md.intramolecular;
@@ -112,6 +122,7 @@ pt.thisID = md.thisID;
 pt.mad = md.mad;
 if (md.colix != 0) pt.colix = md.colix;
 pt.strFormat = md.strFormat;
+pt.text = md.text;
 }switch (md.tokAction) {
 case 12291:
 this.defineAll (-2147483648, pt, true, false, false);
@@ -258,6 +269,7 @@ if (i >= 0) this.measurements.get (i).isHidden = isHide;
 $_M(c$, "toggle", 
 ($fz = function (m) {
 this.radiusData = null;
+this.htMin = null;
 var i = this.find (m);
 var mt;
 if (i >= 0 && !(mt = this.measurements.get (i)).isHidden) this.defineAll (i, mt, true, false, false);
@@ -267,6 +279,7 @@ this.setIndices ();
 $_M(c$, "toggleOn", 
 ($fz = function (indices) {
 this.radiusData = null;
+this.htMin = null;
 this.bsSelected =  new J.util.BS ();
 this.defineAll (-2147483648,  new J.modelset.Measurement ().setPoints (this.modelSet, indices, null, this.defaultTickInfo), false, true, true);
 this.setIndices ();
@@ -275,6 +288,7 @@ this.reformatDistances ();
 $_M(c$, "deleteM", 
 ($fz = function (m) {
 this.radiusData = null;
+this.htMin = null;
 var i = this.find (m);
 if (i >= 0) this.defineAll (i, this.measurements.get (i), true, false, false);
 this.setIndices ();
@@ -306,7 +320,7 @@ for (var i = 1; i <= nPoints; i++) {
 var atomIndex = m.getAtomIndex (i);
 points.addLast (atomIndex >= 0 ? this.viewer.getAtomBits (1095763969, Integer.$valueOf (this.atoms[atomIndex].getAtomNumber ())) : m.getAtom (i));
 }
-this.define (( new J.modelset.MeasurementData (null, this.viewer, points)).set (this.tokAction, this.radiusData, this.strFormat, null, this.tickInfo, this.mustBeConnected, this.mustNotBeConnected, this.intramolecular, true, 0, 0), (isDelete ? 12291 : 1060866));
+this.define (( new J.modelset.MeasurementData (null, this.viewer, points)).set (this.tokAction, this.htMin, this.radiusData, this.strFormat, null, this.tickInfo, this.mustBeConnected, this.mustNotBeConnected, this.intramolecular, true, 0, 0, null), (isDelete ? 12291 : 1060866));
 }, $fz.isPrivate = true, $fz), "~N,J.modelset.Measurement,~B,~B,~B");
 $_M(c$, "find", 
 ($fz = function (m) {
@@ -339,13 +353,14 @@ this.defineMeasurement (-1, m, true);
 $_M(c$, "defineMeasurement", 
 ($fz = function (i, m, doSelect) {
 var value = m.getMeasurement ();
-if (this.radiusData != null && !m.isInRange (this.radiusData, value)) return;
+if (this.htMin != null && !m.isMin (this.htMin) || this.radiusData != null && !m.isInRange (this.radiusData, value)) return;
 if (i == -2147483648) i = this.find (m);
 if (i >= 0) {
 this.measurements.get (i).isHidden = false;
 if (doSelect) this.bsSelected.set (i);
 return;
 }var measureNew =  new J.modelset.Measurement ().setM (this.modelSet, m, value, (m.colix == 0 ? this.colix : m.colix), this.strFormat, this.measurementCount);
+if (!measureNew.$isValid) return;
 this.measurements.addLast (measureNew);
 this.viewer.setStatusMeasuring ("measureCompleted", this.measurementCount++, measureNew.toVector (false).toString (), measureNew.getValue ());
 }, $fz.isPrivate = true, $fz), "~N,J.modelset.Measurement,~B");

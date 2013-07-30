@@ -67,6 +67,31 @@
 			  this._showInfo(false);
     };
     
+    proto._createCanvas = function(id, Info, caption, glmol) {
+			Jmol._setObject(this, id, Info);
+      if (glmol) {
+  			this._GLmol = glmol;
+	   		this._GLmol.applet = this;
+        this._GLmol.id = this._id;
+      }      
+      var t = Jmol._getWrapper(this, true);
+      if (this._deferApplet) {
+      } else if (Jmol._document) {
+				Jmol._documentWrite(t);
+        this._getCanvas(false);				        
+				t = "";
+			} else {
+        this._deferApplet = true;
+				t += '<script type="text/javascript">' + id + '._cover(false)</script>';
+			}
+			t += Jmol._getWrapper(this, false);
+      if (Info.addSelectionOptions)
+				t += Jmol._getGrabberOptions(this, caption);
+			if (Jmol._debugAlert && !Jmol._document)
+				alert(t);
+			this._code = Jmol._documentWrite(t);
+		};
+		                      
     proto._cover = function (doCover) {
       if (doCover || !this._deferApplet) {
         this._displayCoverImage(doCover);
@@ -93,38 +118,14 @@
       Jmol._getElement(this, "coverdiv").style.display = (TF ? "block" : "none");
     };
 
-    proto._createCanvas = function(id, Info, caption, glmol) {
-			Jmol._setObject(this, id, Info);
-      if (glmol) {
-  			this._GLmol = glmol;
-	   		this._GLmol.applet = this;
-        this._GLmol.id = this._id;
-      }      
-      var t = Jmol._getWrapper(this, true);
-      if (this._deferApplet) {
-      } else if (Jmol._document) {
-				Jmol._documentWrite(t);
-        this._getCanvas(false);				        
-				t = "";
-			} else {
-        this._deferApplet = true;
-				t += '<script type="text/javascript">' + id + '._cover(false)</script>';
-			}
-			t += Jmol._getWrapper(this, false);
-      if (Info.addSelectionOptions)
-				t += Jmol._getGrabberOptions(this, caption);
-			if (Jmol._debugAlert && !Jmol._document)
-				alert(t);
-			this._code = Jmol._documentWrite(t);
-		};
-		                      
     proto._start = function() {
       if (this._deferApplet)
         this._getCanvas(false);      
       if (this._defaultModel)
         Jmol._search(this, this._defaultModel);
-      if (this._readyScript)
-        this._script(this._readyScript);
+      //if (this._readyScript) {
+        //this._script(this._readyScript);
+      //}
       this._showInfo(false);
     };                      
 
@@ -231,6 +232,8 @@
       if (!applet._is2D)
 				applet._GLmol.applet = applet;
 			applet._jsSetScreenDimensions();
+      
+      
 			if(applet.aaScale && applet.aaScale != 1)
 				applet._applet.viewer.actionManager.setMouseDragFactor(applet.aaScale)
 			Jmol.__nextExecution();

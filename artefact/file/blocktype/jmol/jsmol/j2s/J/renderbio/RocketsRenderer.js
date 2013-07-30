@@ -41,7 +41,7 @@ this.pointCorner =  new J.util.P3 ();
 });
 Clazz.overrideMethod (c$, "renderBioShape", 
 function (bioShape) {
-if (!(Clazz.instanceOf (bioShape.bioPolymer, J.modelsetbio.AminoPolymer))) return;
+if (!(Clazz.instanceOf (bioShape.bioPolymer, J.modelsetbio.AlphaPolymer))) return;
 var val = !this.viewer.getBoolean (603979900);
 if (this.renderArrowHeads != val) {
 bioShape.falsifyMesh ();

@@ -151,7 +151,7 @@ isSameSource = (this.viewer.getJmolDataSourceFrame (modelIndex) == this.viewer.g
 }}this.currentModelIndex = modelIndex;
 if (ids != null) {
 if (modelIndex >= 0) this.viewer.restoreModelOrientation (modelIndex);
-if (isSameSource && ids.indexOf ("quaternion") >= 0 && ids.indexOf ("plot") < 0 && ids.indexOf ("ramachandran") < 0 && ids.indexOf (" property ") < 0) {
+if (isSameSource && (ids.indexOf ("quaternion") >= 0 || ids.indexOf ("plot") < 0 && ids.indexOf ("ramachandran") < 0 && ids.indexOf (" property ") < 0)) {
 this.viewer.restoreModelRotation (formerModelIndex);
 }}}this.setViewer (clearBackgroundModel);
 }, "~N,~B");
@@ -196,6 +196,7 @@ if (framePointer2 < 0) framePointer2 = frameCount;
 if (framePointer >= frameCount) framePointer = frameCount - 1;
 if (framePointer2 >= frameCount) framePointer2 = frameCount - 1;
 this.firstFrameIndex = framePointer;
+this.currentMorphModel = this.firstFrameIndex;
 this.lastFrameIndex = framePointer2;
 this.frameStep = (framePointer2 < framePointer ? -1 : 1);
 this.rewindAnimation ();
@@ -262,13 +263,14 @@ this.isMovie = false;
 } else {
 this.currentAnimationFrame = (info.get ("currentFrame")).intValue ();
 if (this.currentAnimationFrame < 0 || this.currentAnimationFrame >= this.animationFrames.length) this.currentAnimationFrame = 0;
-}}if (!this.isMovie) {
+}this.setFrame (this.currentAnimationFrame);
+}if (!this.isMovie) {
 this.animationFrames = null;
 }this.viewer.setBooleanProperty ("_ismovie", this.isMovie);
 this.bsDisplay = null;
 this.currentMorphModel = this.morphCount = 0;
 }, "java.util.Map");
-$_M(c$, "gettAnimationFrames", 
+$_M(c$, "getAnimationFrames", 
 function () {
 return this.animationFrames;
 });
@@ -291,6 +293,8 @@ if (this.isMovie) {
 var iModel = this.modelIndexForFrame (i);
 this.currentAnimationFrame = i;
 i = iModel;
+} else {
+this.currentAnimationFrame = i;
 }this.setModel (i, true);
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {

@@ -281,7 +281,7 @@ this.isCutoffAbsolute = false;
 this.isSilent = !this.logMessages;
 this.script = this.getScriptParams () + " SPHERE " + radius + ";";
 }, "~N,~B");
-$_M(c$, "setEllipsoid", 
+$_M(c$, "setEllipsoidP4", 
 function (v) {
 this.dataType = 66;
 this.distance = 1;
@@ -290,7 +290,7 @@ this.cutoff = 1.4E-45;
 this.isCutoffAbsolute = false;
 this.isSilent = !this.logMessages;
 }, "J.util.P4");
-$_M(c$, "setEllipsoid", 
+$_M(c$, "setEllipsoidAF", 
 function (bList) {
 this.anisoB = bList;
 this.dataType = 67;

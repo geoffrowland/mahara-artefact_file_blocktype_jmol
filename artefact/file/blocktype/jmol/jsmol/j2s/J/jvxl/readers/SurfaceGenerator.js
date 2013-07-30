@@ -471,15 +471,15 @@ this.surfaceReader = this.newReader ("IsoShapeReader");
 this.generateSurface ();
 return true;
 }if ("ellipsoid" === propertyName) {
-if (Clazz.instanceOf (value, J.util.P4)) this.params.setEllipsoid (value);
- else if (J.util.Escape.isAF (value)) this.params.setEllipsoid (value);
+if (Clazz.instanceOf (value, J.util.P4)) this.params.setEllipsoidP4 (value);
+ else if (J.util.Escape.isAF (value)) this.params.setEllipsoidAF (value);
  else return true;
 this.readerData = Float.$valueOf (this.params.distance);
 this.surfaceReader = this.newReader ("IsoShapeReader");
 this.generateSurface ();
 return true;
 }if ("ellipsoid3" === propertyName) {
-this.params.setEllipsoid (value);
+this.params.setEllipsoidAF (value);
 this.readerData = Float.$valueOf (this.params.distance);
 this.surfaceReader = this.newReader ("IsoShapeReader");
 this.generateSurface ();
@@ -713,6 +713,9 @@ this.params.state = 3;
 }if (this.params.colorBySign || this.params.isBicolorMap) {
 this.params.state = 3;
 this.surfaceReader.applyColorScale ();
+}if (this.jvxlData.vertexColorMap != null) {
+this.jvxlData.vertexColorMap = null;
+this.surfaceReader.hasColorData = false;
 }this.surfaceReader.jvxlUpdateInfo ();
 this.setMarchingSquares (this.surfaceReader.marchingSquares);
 this.surfaceReader.discardTempData (false);

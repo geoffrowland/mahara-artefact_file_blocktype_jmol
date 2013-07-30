@@ -154,13 +154,13 @@ $_M(c$, "drawLine2",
 function (x1, y1, z1, x2, y2, z2, diameter) {
 this.pt0i.set (x1, y1, z1);
 this.pt1i.set (x2, y2, z2);
+if (this.dotsOrDashes) {
+if (this.dashDots != null) this.drawDashed (x1, y1, z1, x2, y2, z2, this.dashDots);
+} else {
 if (diameter < 0) {
 this.g3d.drawDashedLine (4, 2, this.pt0i, this.pt1i);
 return 1;
-}if (this.dotsOrDashes) {
-this.drawDashed (x1, y1, z1, x2, y2, z2, this.dashDots);
-} else {
-this.g3d.fillCylinder (2, diameter, this.pt0i, this.pt1i);
+}this.g3d.fillCylinder (2, diameter, this.pt0i, this.pt1i);
 }return Clazz.doubleToInt ((diameter + 1) / 2);
 }, "~N,~N,~N,~N,~N,~N,~N");
 $_M(c$, "drawString", 
@@ -182,6 +182,7 @@ this.g3d.drawString (sVal, this.font3d, xT, yT, zT, zT, 0);
 }, "~N,~N,~N,~N,~B,~B,~B,~N,~S");
 $_M(c$, "drawDashed", 
 function (xA, yA, zA, xB, yB, zB, array) {
+if (array == null || this.width < 0) return;
 var f = array[0];
 var dx = xB - xA;
 var dy = yB - yA;

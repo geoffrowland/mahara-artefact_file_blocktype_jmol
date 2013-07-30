@@ -57,7 +57,7 @@ class PluginBlocktypeJmol extends PluginBlocktype {
 
     public static function postinst($oldversion) {
         if ($oldversion == 0) {
-            set_config_plugin('blocktype', 'jmol', 'enabledtypes', serialize(array('alc', 'cif', 'cml', 'hin', 'mcif', 'mol', 'mol2', 'pdb', 'sdf', 'xyz')));
+            set_config_plugin('blocktype', 'jmol', 'enabledtypes', serialize(array('alc', 'cif', 'cml', 'gz', 'hin', 'mcif', 'mol', 'mol2', 'pdb', 'pse', 'sdf', 'xyz')));
         }
     }
 
@@ -67,8 +67,7 @@ class PluginBlocktypeJmol extends PluginBlocktype {
         if (empty($configdata['artefactid'])) {
             return '';
         }
-        $result = self::get_js_nojq_source();
-                     
+        $result = self::get_js_source();             
         require_once(get_config('docroot') . 'artefact/lib.php');
         $artefact = $instance->get_artefact_instance($configdata['artefactid']);
         if (!file_exists($artefact->get_path())) {
@@ -87,7 +86,7 @@ class PluginBlocktypeJmol extends PluginBlocktype {
             return get_string('typeremoved', 'blocktype.file/jmol');
         }
         $callbacks = self::get_all_filetype_players();
-        $result .= '<div class="jmol-container center"><div class="jmol">' . call_static_method('PluginBlocktypeJmol', $callbacks[$mimetypefiletypes[$mimetype]], $artefact, $instance, $width, $height, $initscript, $controls, $jmolpopupmenu) . '</div></div>';
+        $result .= '<div class="jmol-container center"><div class="jmol">' . call_static_method('PluginBlocktypeJmol', $callbacks[$mimetypefiletypes[$mimetype]], $artefact, $instance, $width, $height, $initscript, $controls) . '</div></div>';
         if (!empty($configdata['showdescription']) && !empty($description)) {
             $result .= '<p>'.$description.'</p>';
         }
@@ -102,7 +101,7 @@ class PluginBlocktypeJmol extends PluginBlocktype {
         $configdata = $instance->get('configdata');
         safe_require('artefact', 'file');
         $instance->set('artefactplugin', 'file');
-        $defaultloadscript = 'set antialiasDisplay true;';
+        $defaultloadscript = 'set antialiasDisplay on;';
         $defaultcontrolscript = '
 jmolMenu([
 ["#optgroup", "'.get_string('Style', 'blocktype.file/jmol').'"],
@@ -185,7 +184,7 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         $artefact->icon = call_static_method(generate_artefact_class_name($artefact->artefacttype), 'get_icon', array('id' => $artefact->id));
         return $artefact;
     }
-/// file type stuff
+//  file type stuff
     public static function save_config_options($values) {
         $enabledtypes = array();
         foreach ($values as $type => $enabled) {
@@ -264,92 +263,101 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
             'alc'       => 'jmol_player', // tested 
             'cif'       => 'jmol_player', // tested   
             'cml'       => 'jmol_player', // tested 
+            'gz'        => 'jmol_player', // tested for pdb.gz
             'hin'       => 'jmol_player', // tested
             'mcif'      => 'jmol_player', // tested       
             'mol'       => 'jmol_player', // tested
             'mol2'      => 'jmol_player', // tested
             'pdb'       => 'jmol_player', // tested
+            'pse'       => 'jmol_player', // tested
             'sdf'       => 'jmol_player', // tested
             'xyz'       => 'jmol_player', // tested
         );
     }
     
     // Jmol player
-    public static function jmol_player($artefact, $block, $width, $height, $initscript, $controls, $jmolpopupmenu) {
+    public static function jmol_player($artefact, $block, $width, $height, $initscript, $controls) {
         static $count = 0;
         $count++;
         $id = time() . $count;
+        $wwwroot = get_config('wwwroot');
         $url = self::get_download_link($artefact, $block);
-        $moldata = file_get_contents($artefact->get_path());
-        // The fixes below work for filetypes alc cif cml hin mcif mol mol2 pdb sdf xyz
-        // Fix to convert Windows EOL \r\n and \r to linux EOL \n
-        // Escape linux line endings \n
-        // Convert double quotes to single       
-        $search = array("\r\n", "\r", "\n", '"');
-        $replace = array("\n", "\n", "\\\\n", "'");
-        $moldata = str_replace($search, $replace, $moldata);      
         $molfile = explode(".", hsc($artefact->get('title')));
-        // Use file extension to customise display options
-        $molext = $molfile[1];
-        $html = '';
-        $html .= '<div style="width:'.$width.'px">';
+        
+        // Use file extension to customise display options and binary file handling
+        $molext = $molfile[1];        
+        $molpath = $url . '&ext=.' . $molext;
+        if ($molfile[2] == 'gz'){
+			$molpath = $molpath.'.gz';
+		}	
+        $html = '<div style="width:'.$width.'px">';
         $html .= '<a title="Download structure data file" href ="' . $url . '">' . hsc($artefact->get('title')) . '</a><br />';
-        $html .= '<div id="jmoldiv'.$id.'" style="width:'.$width.'px; height:'.$height.'px; border: 1px solid lightgrey; background-color: lightgrey; background-image:url(\''.get_config('wwwroot').'artefact/file/blocktype/jmol/Jmol_icon_94.png\'); background-repeat: no-repeat">';
-        // Loading the file contents into PHP, then using load inline, avoids issues with Java applet security and Mahara view permissions
+        $html .= '<div id="jmoldiv'.$id.'" style="width:'.$width.'px; height:'.$height.'px; border: 1px solid lightgray; background-color: lightgray; background-image:url(\''.get_config('wwwroot').'artefact/file/blocktype/jmol/Jmol_icon_94.png\'); background-repeat: no-repeat">';
         $html .= '<script type="text/javascript">';
         $html .= 'var info'.$id.' = {';
+        $html .= 'color: "white",';
         $html .= 'width: '.$width.',';
         $html .= 'height: '.$height.',';
-        $html .= 'j2sPath: "'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/j2s",';
-        $html .= 'serverURL: "'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/jsmol.php",'; 
-        $html .= 'isSigned: false,';
-        $html .= 'jarPath: "'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/java",';
-        $html .= 'jarFile: "JmolApplet0.jar",';
+        $html .= 'debug: false,';
+        $html .= 'serverURL: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/jsmol.php",';
         $html .= 'use: "HTML5",';
-        $html .= 'color: "white",';
+        $html .= 'jarPath: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/java",';
+        $html .= 'j2sPath: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/j2s",';
+        $html .= 'jarFile: "JmolApplet0.jar",';
+        $html .= 'isSigned: false,';
         $html .= 'disableJ2SLoadMonitor: true,';
         $html .= 'disableInitialConsole: true,';
         $html .= 'addSelectionOptions: false,';
+        $html .= 'allowjavascript: true,';
         if ($molext == "cif"){
-            $html .= 'script: "load inline \"'.$moldata.'\" {1 1 1} PACKED;'.$initscript.';'.$jmolpopupmenu.'"';
+            // fill 1 x 1 x 1 unit cell by default for CIF files (typically used for mineral crystal structures)
+            $html .= 'script: "load \"CIF::'.$molpath.'\" {1 1 1} PACKED; '.$initscript.'"';
         }else if ($molext == "pdb"){
-            $html .= 'script: "set pdbAddHydrogens true; load inline \"'.$moldata.'\";'.$initscript.';'.$jmolpopupmenu.'"';
+            // add hydrogens by default to PDB files (typically used for biological macromolecules)
+            // $html .= 'script: "set pdbAddHydrogens true; load \"PDB::'.$molpath.'\"; select protein or nucleic; cartoons Only; color structure; select *; '.$initscript.'"';
+            $html .= 'script: "set pdbAddHydrogens true; load \"PDB::'.$molpath.'\"; '.$initscript.'"';   
         }else{
-            $html .= 'script: "load inline \"'.$moldata.'\";'.$initscript.';'.$jmolpopupmenu.'"';
+            $html .= 'script: "load \"'.$molpath.'\"; '.$initscript.'"';
         }
         $html .= '};';
-        // these functions mimic behavior of Jmol.js
-        $html .= 'function jmolCheckbox(script1, script0,text,ischecked) {Jmol.jmolCheckbox(jmolApplet'.$id.',script1, script0, text, ischecked)}';
-        $html .= 'function jmolButton(script, text) {Jmol.jmolButton(jmolApplet'.$id.', script,text)}';
-        $html .= 'function jmolHtml(s) { document.write(s) };';
-        $html .= 'function jmolBr() { jmolHtml("<br />") }';
-        $html .= 'function jmolMenu(a) {Jmol.jmolMenu(jmolApplet'.$id.', a)}';
+        // these functions mimic behavior of Jmol.js and so allow Jmol.js script commands to be used for Jmol applet controls
+        $html .= 'function jmolCheckbox(scriptWhenChecked, scriptWhenUnchecked, labelHtml, ischecked) {Jmol.jmolCheckbox(jmolApplet'.$id.',scriptWhenChecked, scriptWhenUnchecked, labelHtml, ischecked)}';
+        $html .= 'function jmolButton(script, label) {Jmol.jmolButton(jmolApplet'.$id.', script, label)}';
+        $html .= 'function jmolMenu(arrayOfMenuItems, size) {Jmol.jmolMenu(jmolApplet'.$id.', arrayOfMenuItems, size)}';
+        $html .= 'function jmolCommandInput(label, size) {Jmol.jmolCommandInput(jmolApplet'.$id.', label, size)}';
+        $html .= 'function jmolRadioGroup(arrayOfRadioButtons, separatorHtml) {Jmol.jmolRadioGroup(jmolApplet'.$id.', arrayOfRadioButtons, separatorHtml)}';
+        $html .= 'function jmolRadio(script, labelHtml, isChecked, separatorHtml) {Jmol.jmolRadio(jmolApplet'.$id.', script, labelHtml, isChecked, separatorHtml)}';
+        $html .= 'function jmolHtml(html) { document.write(html) };';
+        $html .= 'function jmolBr() { jmolHtml("<br />") }'; 
+        // display Jmol applet
         $html .= 'Jmol.getApplet("jmolApplet'.$id.'", info'.$id.');';
         $html .= 'jmolHtml("</div>");';
+        // add Jmol controls
         $html .= 'jmolHtml("<div style=\"text-align:left\">");';
         $html .= ''.$controls.';';
         $html .= '</script>';
+        // close divs
         $html .= '</div>';
         $html .= '</div>';
         return $html;
     }
 
-    private static function get_download_link(ArtefactTypeFile $artefact, BlockInstance $instance) {      
-        return get_config('wwwroot') . 'artefact/file/download.php?file=' 
-            . $artefact->get('id')
+    private static function get_download_link(ArtefactTypeFile $artefact, BlockInstance $instance) {
+
+        return '../artefact/file/blocktype/jmol/download.php?file='
+            .  $artefact->get('id')
             . '&view=' . $instance->get('view')
             . '&download=1';
     }
-
-    private static function get_js_nojq_source() {
-        if (defined('BLOCKTYPE_JMOL_JS_INCLUDED')) {
+    
+    private static function get_js_source() {
+        if (defined('BLOCKTYPE_INTERNALMEDIA_JS_INCLUDED')) {
             return '';
         }
-
-        define('BLOCKTYPE_JMOL_JS_INCLUDED', true);
-            return '<script type="text/javascript" src="'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/JSmol.min.nojq.js"></script>';
+        define('BLOCKTYPE_INTERNALMEDIA_JS_INCLUDED', true);
+        return '<script src="'.get_config('wwwroot').'artefact/file/blocktype/jmol/jsmol/JSmol.min.nojq.js"></script>';
     }
-
+    
     public static function default_copy_type() {
         return 'full';
     }

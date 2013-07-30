@@ -106,7 +106,7 @@ if (this.cartoonsFancy && val >= 16) val = 4;
 if (this.hermiteLevel == 0) val = 0;
 if (val != this.aspectRatio && val != 0 && val1 != 0) this.invalidateMesh = true;
 this.aspectRatio = val;
-TF = this.viewer.getBoolean (603979967);
+TF = this.viewer.getBoolean (603979966);
 if (TF != this.isTraceAlpha) this.invalidateMesh = true;
 this.isTraceAlpha = TF;
 this.invalidateSheets = false;
@@ -288,7 +288,8 @@ J.util.Logger.error ("render mesh error hermiteConic: " + e.toString ());
 throw e;
 }
 }
-}this.g3d.fillHermite (this.isNucleic ? 4 : 7, this.diameterBeg, this.diameterMid, this.diameterEnd, this.controlPointScreens[this.iPrev], this.controlPointScreens[i], this.controlPointScreens[this.iNext], this.controlPointScreens[this.iNext2]);
+}if (this.diameterBeg == 0 && this.diameterEnd == 0) this.g3d.drawLineAB (this.controlPointScreens[i], this.controlPointScreens[this.iNext]);
+ else this.g3d.fillHermite (this.isNucleic ? 4 : 7, this.diameterBeg, this.diameterMid, this.diameterEnd, this.controlPointScreens[this.iPrev], this.controlPointScreens[i], this.controlPointScreens[this.iNext], this.controlPointScreens[this.iNext2]);
 }, "~N,~B");
 $_M(c$, "renderHermiteRibbon", 
 function (doFill, i, thisTypeOnly) {

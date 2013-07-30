@@ -1,5 +1,7 @@
 // core.z.js
 //
+// BH 7/23/2013 7:24:01 AM fixing Number.shortValue() and Number.byteValue() for negative values
+// BH 6/16/2013 1:31:30 PM adding /| in String.replace -- thank you David Koes
 // BH 3/13/2013 12:49:23 PM setting Boolean.valueOf() "@" 
 // BH 3/2/2013 10:46:45 PM removed Double.valueOf(String)
 // BH 11/6/2012 8:26:33 PM added instanceof Int32Array in String.instantialize
@@ -25,16 +27,20 @@ Clazz.implementOf(Number,java.io.Serializable);
 Number.equals=Clazz.innerFunctions.equals;
 Number.getName=Clazz.innerFunctions.getName;
 
+
 Number.serialVersionUID=Number.prototype.serialVersionUID=-8742448824652078965;
 
+// HOWEVER this is not correct -- 0xffff should be -1. 
 $_M(Number,"shortValue",
 function(){
-return Math.round(this)&0xffff;
+var x = Math.round(this)&0xffff;
+return (this < 0 && x > 0 ? x - 0x10000 : x);
 });
 
 $_M(Number,"byteValue",
 function(){
-return Math.round(this)&0xff;
+var x = Math.round(this)&0xff;
+return (this < 0 && x > 0 ? x - 0x100 : x);
 });
 
 $_M(Number,"intValue",
@@ -69,7 +75,7 @@ Integer.prototype.valueOf=function(){return 0;};
 Integer.toString=Integer.prototype.toString=function(){
 if(arguments.length!=0){
 return""+arguments[0];
-}else if(this===Integer){
+} else if(this===Integer){
 return"class java.lang.Integer";
 }
 return""+this.valueOf();
@@ -205,9 +211,23 @@ return false;
 }
 return s.valueOf()==this.valueOf();
 },"Object");
-Integer.toHexString=Integer.prototype.toHexString=function(d){if(d.valueOf)d=d.valueOf();return d._numberToString(16);};
+Integer.toHexString=Integer.prototype.toHexString=function(d){
+if(d.valueOf)d=d.valueOf();
+if (d < 0) {
+var b = d & 0xFFFFFF;
+var c = ((d>>24)&0xFF);
+return c._numberToString(16) + (b = b._numberToString(16)).substring(b.length - 6);
+}
+return d._numberToString(16);};
 Integer.toOctalString=Integer.prototype.toOctalString=function(d){if(d.valueOf)d=d.valueOf();return d._numberToString(8);};
 Integer.toBinaryString=Integer.prototype.toBinaryString=function(d){if(d.valueOf)d=d.valueOf();return d._numberToString(2);};
+
+Number.toString = Number.prototype.toString=function(a){
+if (arguments.length == 0)return ""+a
+return Integer.toHexString(a);
+};
+
+
 
 Integer.decode=$_M(Integer,"decode",
 function(nm){
@@ -1085,12 +1105,13 @@ String.getName=Clazz.innerFunctions.getName;
 String.serialVersionUID=String.prototype.serialVersionUID=-6849794470754667710;
 
 String.prototype.$replace=function(c1,c2){
-
-c1=c1.replace(/([\\\/\$\.\*\+\{\}\?\^\(\)\[\]])/g,function($0,$1){
-return"\\"+$1;
-});
-var regExp=new RegExp(c1,"gm");
-return this.replace(regExp,c2);
+	if (c1 == c2 || this.indexOf (c1) < 0) return this;
+	if (c1.length == 1) {
+    if ("\\$.*+|?^{}()[]".indexOf(c1) >= 0) 	c1 = "\\" + c1;
+  } else {    
+    c1=c1.replace(/([\\\$\.\*\+\|\?\^\{\}\(\)\[\]])/g,function($0,$1){return"\\"+$1;});
+  }
+  return this.replace(new RegExp(c1,"gm"),c2);
 };
 String.prototype.$generateExpFunction=function(str){
 var arr=[];

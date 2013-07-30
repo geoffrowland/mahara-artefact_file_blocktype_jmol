@@ -53,7 +53,7 @@ class PluginArtefactFile extends PluginArtefact {
         return array(
             'content/files' => array(
                 'path' => 'content/files',
-                'url' => 'artefact/file/',
+                'url' => 'artefact/file/index.php',
                 'title' => get_string('Files', 'artefact.file'),
                 'weight' => 30,
             ),
@@ -891,32 +891,7 @@ class ArtefactTypeFile extends ArtefactTypeFileBase {
         if (empty($data->filetype) || $data->filetype == 'application/octet-stream') {
             $data->filetype = $data->guess;
         }
-        // The browser may have been wrong, so use file extension to force some mime-types.////
-        $ext = $data->oldextension;
-        switch ($ext) {
-           case 'mm': $data->filetype = 'application/x-freemind';
-           break;
-           case 'alc': $data->filetype = 'chemical/x-alchemy';
-           break;
-           case 'cif': $data->filetype = 'chemical/x-cif';
-           break;
-           case 'cml': $data->filetype = 'chemical/x-cml';
-           break;
-           case 'hin': $data->filetype = 'chemical/x-hin';
-           break;
-           case 'mcif': $data->filetype = 'chemical/x-mmcif';
-           break;
-           case 'mol': $data->filetype = 'chemical/x-mdl-molfile';
-           break;
-           case 'mol2': $data->filetype = 'chemical/x-mol2';
-           break;
-           case 'pdb': $data->filetype = 'chemical/x-pdb';
-           break;
-           case 'sdf': $data->filetype = 'chemical/x-mdl-sdfile';
-           break;
-           case 'xyz': $data->filetype = 'chemical/x-xyz';
-           break;
-        }
+
         foreach (array('video', 'audio', 'archive') as $artefacttype) {
             $classname = 'ArtefactType' . ucfirst($artefacttype);
             if (call_user_func_array(array($classname, 'is_valid_file'), array($path, &$data))) {
@@ -1574,7 +1549,7 @@ class ArtefactTypeFile extends ArtefactTypeFileBase {
 
         return array(
             '_default' => $wwwroot . 'artefact/file/download.php?file=' . $id,
-            get_string('folder', 'artefact.file') => $wwwroot . 'artefact/file/?folder=' . $id,
+            get_string('folder', 'artefact.file') => $wwwroot . 'artefact/file/index.php?folder=' . $id,
         );
     }
 
@@ -1838,7 +1813,7 @@ class ArtefactTypeFolder extends ArtefactTypeFileBase {
         $wwwroot = get_config('wwwroot');
 
         return array(
-            '_default' => $wwwroot . 'artefact/file/?folder=' . $id,
+            '_default' => $wwwroot . 'artefact/file/index.php?folder=' . $id,
         );
     }
 

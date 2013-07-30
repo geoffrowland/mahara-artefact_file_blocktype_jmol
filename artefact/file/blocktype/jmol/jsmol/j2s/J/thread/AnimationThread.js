@@ -22,7 +22,7 @@ $_M(c$, "interrupt",
 function () {
 if (this.stopped) return;
 this.stopped = true;
-J.util.Logger.debug ("animation thread interrupted!");
+if (J.util.Logger.debugging) J.util.Logger.debug ("animation thread interrupted!");
 try {
 this.animationManager.setAnimationOn (false);
 } catch (e) {
@@ -79,7 +79,7 @@ if (!this.runSleep (this.sleepTime, 0)) return;
 mode = 0;
 break;
 case -2:
-J.util.Logger.debug ("animation thread " + this.intThread + " exiting");
+if (J.util.Logger.debugging) J.util.Logger.debug ("animation thread " + this.intThread + " exiting");
 this.animationManager.stopThread (false);
 return;
 }

@@ -18,10 +18,10 @@ Clazz.overrideMethod (c$, "getDOMAttributes",
 function () {
 return ["ID", "XYZ", "Connections", "Components", "IsBackboneAtom", "Connects", "Type", "Name"];
 });
-$_M(c$, "processXml", 
+Clazz.overrideMethod (c$, "processXml", 
 function (parent, saxReader) {
 parent.htParams.put ("backboneAtoms", this.bsBackbone);
-Clazz.superCall (this, J.adapter.readers.xml.XmlXsdReader, "processXml", [parent, saxReader]);
+this.PX (parent, saxReader);
 this.atomSetCollection.clearSymbolicMap ();
 }, "J.adapter.readers.xml.XmlReader,~O");
 Clazz.overrideMethod (c$, "processStartElement", 
@@ -41,7 +41,7 @@ this.atom =  new J.adapter.smarter.Atom ();
 this.atom.elementSymbol = this.atts.get ("Components");
 this.atom.atomName = this.atts.get ("ID");
 this.atom.atomSerial = ++this.iAtom;
-if (this.iChain >= 0) this.atom.chainID = String.fromCharCode ((this.iChain - 1) % 26 + 65);
+if (this.iChain >= 0) this.atom.chainID = (this.iChain - 1) % 26 + 65;
 this.atom.group3 = "UNK";
 if (this.iGroup == 0) this.iGroup = 1;
 this.atom.sequenceNumber = this.iGroup;
