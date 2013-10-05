@@ -74,7 +74,7 @@ return J.shapespecial.Ellipsoid.crtval[prob < 1 ? 0 : prob > 99 ? 98 : prob - 1]
 $_M(c$, "setEquation", 
 function (coef) {
 this.isValid = false;
-this.tensor = J.util.Tensor.getTensorFromThermalEquation (coef);
+this.tensor = J.util.Tensor.getTensorFromThermalEquation (coef, null);
 this.validate (true);
 }, "~A");
 $_M(c$, "setAxes", 

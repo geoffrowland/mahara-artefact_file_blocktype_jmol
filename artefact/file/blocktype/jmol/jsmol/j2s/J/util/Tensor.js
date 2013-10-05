@@ -1,6 +1,7 @@
 Clazz.declarePackage ("J.util");
-Clazz.load (null, "J.util.Tensor", ["java.lang.Float", "java.util.Arrays", "$.Hashtable", "J.util.Eigen", "$.EigenSort", "$.Matrix3f", "$.P3", "$.Parser", "$.Quaternion", "$.TextFormat", "$.V3"], function () {
+Clazz.load (null, "J.util.Tensor", ["java.lang.Float", "java.util.Arrays", "$.Hashtable", "J.util.Eigen", "$.EigenSort", "$.Escape", "$.Matrix3f", "$.P3", "$.Parser", "$.Quaternion", "$.TextFormat", "$.V3"], function () {
 c$ = Clazz.decorateAsClass (function () {
+this.id = null;
 this.type = null;
 this.iType = -1;
 this.asymMatrix = null;
@@ -16,25 +17,29 @@ this.sortIso = false;
 this.modelIndex = 0;
 this.atomIndex1 = -1;
 this.atomIndex2 = -1;
+this.isModulated = false;
+this.isUnmodulated = false;
 Clazz.instantialize (this, arguments);
 }, J.util, "Tensor");
 c$.getType = $_M(c$, "getType", 
 ($fz = function (type) {
 var pt = type.indexOf ("_");
 if (pt >= 0) type = type.substring (0, pt);
-pt = ";iso....;adp....;tls-u..;tls-r..;ms.....;efg....;isc....;charge.;".indexOf (";" + type.toLowerCase () + ".");
-return (pt < 0 ? -1 : Clazz.doubleToInt (pt / 8));
+pt = ";iso........;adp........;tls-u......;tls-r......;ms.........;efg........;isc........;charge.....;quadrupole.".indexOf (";" + type.toLowerCase () + ".");
+return (pt < 0 ? -1 : Clazz.doubleToInt (pt / 11));
 }, $fz.isPrivate = true, $fz), "~S");
 $_M(c$, "getInfo", 
 function (infoType) {
 if (infoType.charAt (0) != ';') infoType = ";" + infoType + ".";
-switch (Clazz.doubleToInt (";.............;eigenvalues..;eigenvectors.;asymmatrix...;symmatrix....;value........;isotropy.....;anisotropy...;asymmetry....;eulerzyz.....;eulerzxz.....;quaternion...;indices......;string.......;type.........".indexOf (infoType) / 14)) {
+switch (Clazz.doubleToInt (";.............;eigenvalues..;eigenvectors.;asymmatrix...;symmatrix....;value........;isotropy.....;anisotropy...;asymmetry....;eulerzyz.....;eulerzxz.....;quaternion...;indices......;string.......;type.........;id...........;span.........;skew.........".indexOf (infoType) / 14)) {
 default:
 var info =  new java.util.Hashtable ();
-var s = J.util.Parser.getTokens (J.util.TextFormat.replaceAllCharacter (";.............;eigenvalues..;eigenvectors.;asymmatrix...;symmatrix....;value........;isotropy.....;anisotropy...;asymmetry....;eulerzyz.....;eulerzxz.....;quaternion...;indices......;string.......;type.........", ";.", ' ').trim ());
+var s = J.util.Parser.getTokens (J.util.TextFormat.replaceAllCharacter (";.............;eigenvalues..;eigenvectors.;asymmatrix...;symmatrix....;value........;isotropy.....;anisotropy...;asymmetry....;eulerzyz.....;eulerzxz.....;quaternion...;indices......;string.......;type.........;id...........;span.........;skew.........", ";.", ' ').trim ());
 java.util.Arrays.sort (s);
-for (var i = 0; i < s.length; i++) info.put (s[i], this.getInfo (s[i]));
-
+for (var i = 0; i < s.length; i++) {
+var o = this.getInfo (s[i]);
+if (o != null) info.put (s[i], o);
+}
 return info;
 case 1:
 return this.eigenValues;
@@ -62,11 +67,11 @@ return J.util.Matrix3f.newA (b);
 case 5:
 return Float.$valueOf (this.eigenValues[2]);
 case 6:
-return Float.$valueOf (this.getIso ());
+return Float.$valueOf (this.isotropy ());
 case 7:
-return Float.$valueOf (this.getAnisotropy ());
+return Float.$valueOf (this.anisotropy ());
 case 8:
-return Float.$valueOf (this.getAsymmetry ());
+return Float.$valueOf (this.asymmetry ());
 case 9:
 return (this.getInfo ("quaternion")).getEulerZYZ ();
 case 10:
@@ -79,19 +84,37 @@ case 13:
 return this.toString ();
 case 14:
 return this.type;
+case 15:
+return this.id;
+case 16:
+return Float.$valueOf (this.span ());
+case 17:
+return Float.$valueOf (this.skew ());
 }
 }, "~S");
-$_M(c$, "getIso", 
+$_M(c$, "isotropy", 
 function () {
 return (this.eigenValues[0] + this.eigenValues[1] + this.eigenValues[2]) / 3;
 });
-$_M(c$, "getAnisotropy", 
+$_M(c$, "span", 
+function () {
+return Math.abs (this.eigenValues[2] - this.eigenValues[0]);
+});
+$_M(c$, "skew", 
+function () {
+return (this.span () == 0 ? 0 : 3 * (this.eigenValues[1] - this.isotropy ()) / this.span ());
+});
+$_M(c$, "anisotropy", 
 function () {
 return this.eigenValues[2] - (this.eigenValues[0] + this.eigenValues[1]) / 2;
 });
-$_M(c$, "getAsymmetry", 
+$_M(c$, "reducedAnisotropy", 
 function () {
-return this.eigenValues[0] == this.eigenValues[2] ? 0 : (this.eigenValues[1] - this.eigenValues[0]) / (this.eigenValues[2] - this.getIso ());
+return this.anisotropy () * 2 / 3;
+});
+$_M(c$, "asymmetry", 
+function () {
+return this.span () == 0 ? 0 : (this.eigenValues[1] - this.eigenValues[0]) / this.reducedAnisotropy ();
 });
 c$.copyTensor = $_M(c$, "copyTensor", 
 function (t0) {
@@ -105,13 +128,14 @@ t.eigenSignMask = t0.eigenSignMask;
 t.modelIndex = t0.modelIndex;
 t.atomIndex1 = t0.atomIndex1;
 t.atomIndex2 = t0.atomIndex2;
+t.id = t0.id;
 return t;
 }, "J.util.Tensor");
 Clazz.makeConstructor (c$, 
 ($fz = function () {
 }, $fz.isPrivate = true, $fz));
 c$.getTensorFromAsymmetricTensor = $_M(c$, "getTensorFromAsymmetricTensor", 
-function (asymmetricTensor, type) {
+function (asymmetricTensor, type, id) {
 var a =  Clazz.newDoubleArray (3, 3, 0);
 for (var i = 3; --i >= 0; ) for (var j = 3; --j >= 0; ) a[i][j] = asymmetricTensor[i][j];
 
@@ -144,21 +168,22 @@ cross.cross (evec[i], evec[(i + 1) % 3]);
 var vectors =  new Array (3);
 var values =  Clazz.newFloatArray (3, 0);
 eigen.fillArrays (vectors, values);
-var t = J.util.Tensor.newTensorType (vectors, values, type);
+var t = J.util.Tensor.newTensorType (vectors, values, type, id);
 t.asymMatrix = asymmetricTensor;
 t.symMatrix = a;
+t.id = id;
 return t;
-}, "~A,~S");
+}, "~A,~S,~S");
 c$.getTensorFromEigenVectors = $_M(c$, "getTensorFromEigenVectors", 
-function (eigenVectors, eigenValues, type) {
+function (eigenVectors, eigenValues, type, id) {
 var values =  Clazz.newFloatArray (3, 0);
 var vectors =  new Array (3);
 for (var i = 0; i < 3; i++) {
 vectors[i] = J.util.V3.newV (eigenVectors[i]);
 values[i] = eigenValues[i];
 }
-return J.util.Tensor.newTensorType (vectors, values, type);
-}, "~A,~A,~S");
+return J.util.Tensor.newTensorType (vectors, values, type, id);
+}, "~A,~A,~S,~S");
 c$.getTensorFromAxes = $_M(c$, "getTensorFromAxes", 
 function (axes) {
 var t =  new J.util.Tensor ();
@@ -176,10 +201,11 @@ t.sortAndNormalize ();
 return t;
 }, "~A");
 c$.getTensorFromThermalEquation = $_M(c$, "getTensorFromThermalEquation", 
-function (coefs) {
+function (coefs, id) {
 var t =  new J.util.Tensor ();
 t.eigenValues =  Clazz.newFloatArray (3, 0);
 t.eigenVectors =  new Array (3);
+t.id = (id == null ? "coefs=" + J.util.Escape.eAD (coefs) : id);
 var mat =  Clazz.newDoubleArray (3, 3, 0);
 mat[0][0] = coefs[0];
 mat[1][1] = coefs[1];
@@ -191,7 +217,7 @@ J.util.Eigen.getUnitVectors (mat, t.eigenVectors, t.eigenValues);
 t.setType ("adp");
 t.sortAndNormalize ();
 return t;
-}, "~A");
+}, "~A,~S");
 $_M(c$, "setType", 
 function (type) {
 if (this.type == null || type == null) this.type = type;
@@ -213,17 +239,18 @@ function (bsSelected, iAtom) {
 return (iAtom >= 0 ? (this.atomIndex1 == iAtom || this.atomIndex2 == iAtom) : bsSelected.get (this.atomIndex1) && (this.atomIndex2 < 0 || bsSelected.get (this.atomIndex2)));
 }, "J.util.BS,~N");
 c$.newTensorType = $_M(c$, "newTensorType", 
-($fz = function (vectors, values, type) {
+($fz = function (vectors, values, type, id) {
 var t =  new J.util.Tensor ();
 t.eigenValues = values;
 t.eigenVectors = vectors;
 for (var i = 0; i < 3; i++) t.eigenVectors[i].normalize ();
 
 t.setType (type);
+t.id = id;
 t.sortAndNormalize ();
 t.eigenSignMask = (t.eigenValues[0] >= 0 ? 1 : 0) + (t.eigenValues[1] >= 0 ? 2 : 0) + (t.eigenValues[2] >= 0 ? 4 : 0);
 return t;
-}, $fz.isPrivate = true, $fz), "~A,~A,~S");
+}, $fz.isPrivate = true, $fz), "~A,~A,~S,~S");
 $_M(c$, "processType", 
 ($fz = function () {
 this.forThermalEllipsoid = false;
@@ -249,20 +276,19 @@ this.typeFactor = 0.01;
 break;
 case 5:
 this.sortIso = true;
-this.typeFactor = 1.0;
 break;
 case 6:
 this.sortIso = true;
 this.typeFactor = 0.04;
-break;
-case 7:
-this.typeFactor = 1.0;
 break;
 case 3:
 this.altType = "2";
 break;
 case 2:
 this.altType = "3";
+break;
+case 7:
+case 8:
 break;
 }
 }, $fz.isPrivate = true, $fz));
@@ -304,11 +330,9 @@ return (this.type + " " + this.modelIndex + " " + this.atomIndex1 + " " + this.a
 c$.ADP_FACTOR = c$.prototype.ADP_FACTOR = (Math.sqrt (0.5) / 3.141592653589793);
 Clazz.defineStatics (c$,
 "MAGNETIC_SUSCEPTIBILITY_FACTOR", 0.01,
-"ELECTRIC_FIELD_GRADIENT_FACTOR", 1,
-"BORN_EFFECTIVE_CHARGE_FACTOR", 1,
 "INTERACTION_FACTOR", 0.04,
 "tSort", null,
-"KNOWN_TYPES", ";iso....;adp....;tls-u..;tls-r..;ms.....;efg....;isc....;charge.;",
+"KNOWN_TYPES", ";iso........;adp........;tls-u......;tls-r......;ms.........;efg........;isc........;charge.....;quadrupole.",
 "TYPE_OTHER", -1,
 "TYPE_ISO", 0,
 "TYPE_ADP", 1,
@@ -318,5 +342,6 @@ Clazz.defineStatics (c$,
 "TYPE_EFG", 5,
 "TYPE_ISC", 6,
 "TYPE_CHARGE", 7,
-"infoList", ";.............;eigenvalues..;eigenvectors.;asymmatrix...;symmatrix....;value........;isotropy.....;anisotropy...;asymmetry....;eulerzyz.....;eulerzxz.....;quaternion...;indices......;string.......;type.........");
+"TYPE_QUADRUPOLE", 8,
+"infoList", ";.............;eigenvalues..;eigenvectors.;asymmatrix...;symmatrix....;value........;isotropy.....;anisotropy...;asymmetry....;eulerzyz.....;eulerzxz.....;quaternion...;indices......;string.......;type.........;id...........;span.........;skew.........");
 });

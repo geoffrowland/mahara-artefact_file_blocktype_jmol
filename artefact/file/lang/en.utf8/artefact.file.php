@@ -248,6 +248,7 @@ $string['mcif'] = 'MacroMolecular Crystallographic Information File';
 $string['mol'] = 'MDL Molfile';
 $string['mol2'] = 'SYBYL Tripos Mol2 File';
 $string['pdb'] = 'Protein Data Bank';
+$string['pse'] = 'PyMOL Session File';
 $string['sdf'] = 'MDL Structure Data File';
 $string['xyz'] = 'XYZ Coordinate Animation Format';
 

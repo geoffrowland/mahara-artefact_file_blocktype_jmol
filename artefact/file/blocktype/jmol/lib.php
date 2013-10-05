@@ -79,6 +79,7 @@ class PluginBlocktypeJmol extends PluginBlocktype {
         $jmolscript  = (!empty($configdata['jmolscript'])) ? clean_html($configdata['jmolscript']) : null;
         $initscript = str_replace('"', "'", str_replace("\n", "", trim($jmolscript)));
         $controlscript  = (!empty($configdata['controlscript'])) ? clean_html($configdata['controlscript']) : null;
+        $controls = str_replace(";\n", "+", trim($controlscript));
         $controls = str_replace("\n", "", trim($controlscript));
         $mimetype = $artefact->get('filetype');
         $mimetypefiletypes = self::get_allowed_mimetype_filetypes();
@@ -110,11 +111,11 @@ jmolMenu([
 ["wireframe 0.15; spacefill 23%", "'.get_string('Ball and stick', 'blocktype.file/jmol').'", "selected"],
 ["spacefill on", "'.get_string('Spacefill', 'blocktype.file/jmol').'"],
 ["#optgroupEnd"]
-],"","","'.get_string('Display style', 'blocktype.file/jmol').'");
-jmolHtml(" ");
-jmolCheckbox("set showHydrogens on", "set showHydrogens off", "'.get_string('Hydrogens', 'blocktype.file/jmol').'", "checked","","'.get_string('Show/hide hydrogen atoms', 'blocktype.file/jmol').'");
-jmolHtml(" ");
-jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol').'", "", "", "'.get_string('Toggle spin on/off', 'blocktype.file/jmol').'");
+],"","","'.get_string('Display style', 'blocktype.file/jmol').'")+
+jmolHtml(" ")+
+jmolCheckbox("set showHydrogens on", "set showHydrogens off", "'.get_string('Hydrogens', 'blocktype.file/jmol').'", "checked")+
+jmolHtml(" ")+
+jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol').'")
 ';
         return array(
             'artefactid' => self::filebrowser_element($instance, (isset($configdata['artefactid'])) ? array($configdata['artefactid']) : null),
@@ -283,23 +284,25 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         $wwwroot = get_config('wwwroot');
         $url = self::get_download_link($artefact, $block);
         $molfile = explode(".", hsc($artefact->get('title')));
-        
+
         // Use file extension to customise display options and binary file handling
         $molext = $molfile[1];        
         $molpath = $url . '&ext=.' . $molext;
         if ($molfile[2] == 'gz'){
 			$molpath = $molpath.'.gz';
 		}	
-        $html = '<div style="width:'.$width.'px">';
+        $html = '<div style="width:'.$width.'px">'; // container div for Jmol and Controls
         $html .= '<a title="Download structure data file" href ="' . $url . '">' . hsc($artefact->get('title')) . '</a><br />';
-        $html .= '<div id="jmoldiv'.$id.'" style="width:'.$width.'px; height:'.$height.'px; border: 1px solid lightgray; background-color: lightgray; background-image:url(\''.get_config('wwwroot').'artefact/file/blocktype/jmol/Jmol_icon_94.png\'); background-repeat: no-repeat">';
+        $html .= '<div id="jmoldiv'.$id.'" style="width:'.$width.'px; height:'.$height.'px; border: 1px solid lightgray; background-color: lightgray; background-image:url(\''.get_config('wwwroot').'artefact/file/blocktype/jmol/Jmol_icon_94.png\'); background-repeat: no-repeat"></div>';
+        $html .= '<div id="controls'.$id.'" style="text-align:left; width:'.$width.'px; border: 1px solid lightgray"></div>';
+        $html .= '</div>'; // Close Container div
         $html .= '<script type="text/javascript">';
         $html .= 'var info'.$id.' = {';
         $html .= 'color: "white",';
         $html .= 'width: '.$width.',';
         $html .= 'height: '.$height.',';
         $html .= 'debug: false,';
-        $html .= 'serverURL: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/jsmol.php",';
+        $html .= 'serverURL: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/php/jsmol.php",';
         $html .= 'use: "HTML5",';
         $html .= 'jarPath: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/java",';
         $html .= 'j2sPath: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/j2s",';
@@ -320,25 +323,28 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
             $html .= 'script: "load \"'.$molpath.'\"; '.$initscript.'"';
         }
         $html .= '};';
-        // these functions mimic behavior of Jmol.js and so allow Jmol.js script commands to be used for Jmol applet controls
-        $html .= 'function jmolCheckbox(scriptWhenChecked, scriptWhenUnchecked, labelHtml, ischecked) {Jmol.jmolCheckbox(jmolApplet'.$id.',scriptWhenChecked, scriptWhenUnchecked, labelHtml, ischecked)}';
-        $html .= 'function jmolButton(script, label) {Jmol.jmolButton(jmolApplet'.$id.', script, label)}';
-        $html .= 'function jmolMenu(arrayOfMenuItems, size) {Jmol.jmolMenu(jmolApplet'.$id.', arrayOfMenuItems, size)}';
-        $html .= 'function jmolCommandInput(label, size) {Jmol.jmolCommandInput(jmolApplet'.$id.', label, size)}';
-        $html .= 'function jmolRadioGroup(arrayOfRadioButtons, separatorHtml) {Jmol.jmolRadioGroup(jmolApplet'.$id.', arrayOfRadioButtons, separatorHtml)}';
-        $html .= 'function jmolRadio(script, labelHtml, isChecked, separatorHtml) {Jmol.jmolRadio(jmolApplet'.$id.', script, labelHtml, isChecked, separatorHtml)}';
-        $html .= 'function jmolHtml(html) { document.write(html) };';
-        $html .= 'function jmolBr() { jmolHtml("<br />") }'; 
-        // display Jmol applet
-        $html .= 'Jmol.getApplet("jmolApplet'.$id.'", info'.$id.');';
-        $html .= 'jmolHtml("</div>");';
-        // add Jmol controls
-        $html .= 'jmolHtml("<div style=\"text-align:left\">");';
-        $html .= ''.$controls.';';
+        
+        // converts Jmol.js scripts to JSmol JSO syntax.
+        $controls = str_replace("jmolCheckbox(", "Jmol.jmolCheckbox(jmol".$id.", ", $controls);
+        $controls = str_replace("jmolButton(", "Jmol.jmolButton(jmol".$id.", ", $controls);
+        $controls = str_replace("jmolMenu(", "Jmol.jmolMenu(jmol".$id.", ", $controls);
+        $controls = str_replace("jmolCommandInput(", "Jmol.jmolCommandInput(jmol".$id.", ", $controls);
+        $controls = str_replace("jmolRadioGroup(", "Jmol.jmolRadioGroup(jmol".$id.", ", $controls);
+        $controls = str_replace("jmolRadio(", "Jmol.jmolRadio(jmol".$id.", ", $controls);
+        $controls = str_replace("jmolHtml(", "Jmol._documentWrite(", $controls);
+        $controls = str_replace("jmolBr()", "Jmol._documentWrite('<br />')", $controls);
+
+        // display Jmol applet. 
+        $html .= 'MathJax.Hub.Queue(function () {';
+        $html .= 'loadJmol'.$id.'();';
+        $html .= '});';
+        $html .= 'loadJmol'.$id.' = function() {';
+        $html .= 'Jmol.setDocument(0);';
+        $html .= 'Jmol.getApplet("jmol'.$id.'", info'.$id.');';
+        $html .= 'jQuery("#jmoldiv'.$id.'").html(Jmol.getAppletHtml(jmol'.$id.'));';
+        $html .= 'jQuery("#controls'.$id.'").html('.$controls.')';
+        $html .= '}';
         $html .= '</script>';
-        // close divs
-        $html .= '</div>';
-        $html .= '</div>';
         return $html;
     }
 

@@ -152,10 +152,6 @@ $_M(c$, "energyOOP",
 function (gradients) {
 return this.calc.energyOOP (gradients);
 }, "~B");
-$_M(c$, "energyPosition", 
-function (gradients) {
-return this.calc.energyPos (gradients);
-}, "~B");
 $_M(c$, "energyVDW", 
 function (gradients) {
 return this.calc.energyVDW (gradients);

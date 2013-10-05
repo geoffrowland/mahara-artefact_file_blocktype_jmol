@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.minimize");
-Clazz.load (["J.api.MinimizerInterface"], "J.minimize.Minimizer", ["java.util.Hashtable", "J.i18n.GT", "J.minimize.MinAngle", "$.MinAtom", "$.MinBond", "$.MinTorsion", "J.minimize.forcefield.ForceFieldMMFF", "$.ForceFieldUFF", "J.thread.MinimizationThread", "J.util.ArrayUtil", "$.BS", "$.BSUtil", "$.Escape", "$.JmolList", "$.Logger"], function () {
+Clazz.load (["J.api.MinimizerInterface"], "J.minimize.Minimizer", ["java.util.Hashtable", "J.i18n.GT", "J.minimize.MinAngle", "$.MinAtom", "$.MinBond", "$.MinTorsion", "$.MinimizationThread", "J.minimize.forcefield.ForceFieldMMFF", "$.ForceFieldUFF", "J.util.ArrayUtil", "$.BS", "$.BSUtil", "$.Escape", "$.JmolList", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.viewer = null;
 this.atoms = null;
@@ -9,6 +9,7 @@ this.minAtoms = null;
 this.minBonds = null;
 this.minAngles = null;
 this.minTorsions = null;
+this.minPositions = null;
 this.bsMinFixed = null;
 this.atomCount = 0;
 this.bondCount = 0;
@@ -132,6 +133,7 @@ val = this.viewer.getParameter ("minimizationCriterion");
 if (val != null && Clazz.instanceOf (val, Float)) crit = (val).floatValue ();
 }this.crit = Math.max (crit, 0.0001);
 if (this.$minimizationOn) return false;
+var pFF0 = this.pFF;
 this.getForceField (ff);
 if (this.pFF == null) {
 J.util.Logger.error (J.i18n.GT._ ("Could not get class for force field {0}", ff));
@@ -146,6 +148,7 @@ if (bsFixed != null) this.bsAtoms.or (bsFixed);
 this.atomCount = this.bsAtoms.cardinality ();
 var sameAtoms = J.util.BSUtil.areEqual (bsSelected, this.bsSelected);
 this.bsSelected = bsSelected;
+if (pFF0 != null && this.pFF !== pFF0) sameAtoms = false;
 if (!sameAtoms) this.pFF.clear ();
 if ((!sameAtoms || !J.util.BSUtil.areEqual (bsFixed, this.bsFixed)) && !this.setupMinimization ()) {
 this.clear ();
@@ -322,6 +325,7 @@ J.util.Logger.info (this.minTorsions.length + " torsions");
 });
 $_M(c$, "getForceField", 
 function (ff) {
+if (ff.startsWith ("MMFF")) ff = "MMFF";
 if (this.pFF == null || !ff.equals (this.ff)) {
 if (ff.equals ("UFF")) {
 this.pFF =  new J.minimize.forcefield.ForceFieldUFF (this);
@@ -346,7 +350,8 @@ if (this.minimizationThread != null) {
 this.minimizationThread = null;
 }return;
 }if (this.minimizationThread == null) {
-this.minimizationThread =  new J.thread.MinimizationThread (this, this.viewer);
+this.minimizationThread =  new J.minimize.MinimizationThread ();
+this.minimizationThread.setManager (this, this.viewer, null);
 this.minimizationThread.start ();
 }}, $fz.isPrivate = true, $fz), "~B");
 $_M(c$, "getEnergyOnly", 

@@ -14,6 +14,8 @@ this.showNumbers = false;
 this.$showKey = null;
 this.hasColorRange = false;
 this.meshScale = -1;
+this.mySlabValue = 0;
+this.globalSlabValue = 0;
 this.ptTemp = null;
 this.ptTempi = null;
 Clazz.instantialize (this, arguments);
@@ -28,31 +30,34 @@ return this.renderIso ();
 });
 $_M(c$, "renderIso", 
 function () {
+this.setGlobals ();
+for (var i = this.isosurface.meshCount; --i >= 0; ) {
+this.imesh = this.isosurface.meshes[i];
+if (this.imesh.connections != null && !this.viewer.getModelSet ().atoms[this.imesh.connections[0]].isVisible (0)) continue;
+this.hasColorRange = false;
+if (this.renderMeshSlab ()) {
+if (!this.isExport) this.renderInfo ();
+if (this.isExport && this.isGhostPass) {
+this.exportPass = 1;
+this.renderMeshSlab ();
+this.exportPass = 2;
+}}}
+return this.needTranslucent;
+});
+$_M(c$, "setGlobals", 
+($fz = function () {
 this.needTranslucent = false;
 this.iShowNormals = this.viewer.getTestFlag (4);
 this.showNumbers = this.viewer.getTestFlag (3);
 this.isosurface = this.shape;
 this.exportPass = (this.isExport ? 2 : 0);
 this.isNavigationMode = this.viewer.getBoolean (603979887);
-var mySlabValue = 2147483647;
-var slabValue = this.g3d.getSlab ();
 this.$showKey = (this.viewer.getBoolean (603979870) ? Boolean.TRUE : null);
-if (this.isNavigationMode) mySlabValue = Clazz.floatToInt (this.viewer.getNavigationOffset ().z);
 this.isosurface.keyXy = null;
 this.meshScale = -1;
-for (var i = this.isosurface.meshCount; --i >= 0; ) {
-this.imesh = this.isosurface.meshes[i];
-if (this.imesh.connections != null && !this.viewer.getModelSet ().atoms[this.imesh.connections[0]].isVisible (0)) continue;
-this.hasColorRange = false;
-if (this.renderMeshSlab (mySlabValue, slabValue)) {
-if (!this.isExport) this.renderInfo ();
-if (this.isExport && this.isGhostPass) {
-this.exportPass = 1;
-this.renderMeshSlab (mySlabValue, slabValue);
-this.exportPass = 2;
-}}}
-return this.needTranslucent;
-});
+this.globalSlabValue = this.g3d.getSlab ();
+this.mySlabValue = (this.isNavigationMode ? Clazz.floatToInt (this.viewer.getNavigationOffset ().z) : 2147483647);
+}, $fz.isPrivate = true, $fz));
 $_M(c$, "renderInfo", 
 function () {
 if (this.hasColorRange && this.imesh.colorEncoder != null && Boolean.TRUE === this.$showKey) this.showKey ();
@@ -103,8 +108,9 @@ this.g3d.fillRect (x, y, 5, -2147483648, dx, dy);
 this.isosurface.keyXy[1] = Clazz.doubleToInt ((y + dy) / factor);
 }, $fz.isPrivate = true, $fz));
 $_M(c$, "renderMeshSlab", 
-($fz = function (mySlabValue, slabValue) {
+($fz = function () {
 this.volumeRender = (this.imesh.jvxlData.colorDensity && this.imesh.jvxlData.allowVolumeRender);
+var thisSlabValue = this.mySlabValue;
 if (!this.isNavigationMode) {
 var meshSlabValue = this.imesh.jvxlData.slabValue;
 if (meshSlabValue != -2147483648 && this.imesh.jvxlData.isSlabbable) {
@@ -114,21 +120,21 @@ this.pt2f.add (points[1]);
 this.pt2f.scale (0.5);
 this.viewer.transformPt3f (this.pt2f, this.pt2f);
 var r = this.viewer.scaleToScreen (Clazz.floatToInt (this.pt2f.z), Math.round (points[0].distance (points[1]) * 500));
-mySlabValue = Math.round (this.pt2f.z + r * (1 - meshSlabValue / 50));
+thisSlabValue = Math.round (this.pt2f.z + r * (1 - meshSlabValue / 50));
 }}var tcover = this.g3d.getTranslucentCoverOnly ();
 this.g3d.setTranslucentCoverOnly (this.imesh.frontOnly || !this.viewer.getBoolean (603979967));
 this.thePlane = this.imesh.jvxlData.jvxlPlane;
 this.vertexValues = this.imesh.vertexValues;
 var isOK;
-if (mySlabValue != 2147483647 && this.imesh.jvxlData.isSlabbable) {
-this.g3d.setSlab (mySlabValue);
+if (thisSlabValue != 2147483647 && this.imesh.jvxlData.isSlabbable) {
+this.g3d.setSlab (thisSlabValue);
 isOK = this.renderMesh (this.imesh);
-this.g3d.setSlab (slabValue);
+this.g3d.setSlab (this.globalSlabValue);
 } else {
 isOK = this.renderMesh (this.imesh);
 }this.g3d.setTranslucentCoverOnly (tcover);
 return isOK;
-}, $fz.isPrivate = true, $fz), "~N,~N");
+}, $fz.isPrivate = true, $fz));
 Clazz.overrideMethod (c$, "render2", 
 function (isExport) {
 if (this.volumeRender) {

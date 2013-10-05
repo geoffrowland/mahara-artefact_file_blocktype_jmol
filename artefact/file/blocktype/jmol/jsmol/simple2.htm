@@ -5,27 +5,7 @@
 	<title>JSmol -- platform-aware Jmol using jQuery</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-<!-- 
-
-JSmoljQuery.js 			  required
-JSmolCore.js					essential; add next in the order given here
-JSmolApplet.js				essential
-JSmolControls.js			required for any interactivity
-JSmolApi.js						essential
-JSmol.js							required
-
 <script type="text/javascript" src="JSmol.min.js"></script>
-
-
--->
-
-<script type="text/javascript" src="js/JSmoljQuery.js"></script>
-<script type="text/javascript" src="js/JSmolCore.js"></script>
-<script type="text/javascript" src="js/JSmolApplet.js"></script>
-<script type="text/javascript" src="js/JSmolApi.js"></script>
-<script type="text/javascript" src="js/JSmolControls.js"></script>
-<script type="text/javascript" src="js/j2sjmol.js"></script>
-<script type="text/javascript" src="js/JSmol.js"></script>
 
 <script type="text/javascript">
 //<![CDATA[
@@ -83,7 +63,7 @@ var Info = {
 	jarFile: (useSignedApplet ? "JmolAppletSigned.jar" : "JmolApplet.jar"),
 	isSigned: useSignedApplet,
 	addSelectionOptions: false,
-	serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/jsmol.php",
+	serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",
 	readyFunction: null,
 	console: "jmol_infodiv",
 	disableInitialConsole: true,
@@ -193,7 +173,7 @@ $(document).ready(function(){
 		);
 
   // the HTML code is in jmol._code since we are using Jmol.setDocument(0)
-			jmol = Jmol.getApplet("jmol", Info);
+			Jmol.getApplet("jmol", Info);
 
   	$("#middlepanel").html(Jmol.getAppletHtml(jmol));
 

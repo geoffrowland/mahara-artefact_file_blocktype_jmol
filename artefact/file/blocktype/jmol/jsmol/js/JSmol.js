@@ -1,4 +1,4 @@
-
+// BH 9/17/2013 10:18:40 AM  file transfer functions moved to JSmolCore 
 // BH 3/5/2013 9:54:16 PM added support for a cover image: Info.coverImage, coverScript, coverTitle, deferApplet, deferUncover
  
 // BH 1/3/2013 4:54:01 AM mouse binding should return false -- see d.bind(...), and d.bind("contextmenu") is not necessary
@@ -7,13 +7,13 @@
 // author: Bob Hanson, hansonr@stolaf.edu	4/16/2012
 // author: Takanori Nakane biochem_fan 6/12/2012
 
-// This library requires
+// This library requires jQuery and 
 //
-//	JSmoljQuery.js
+//	JSmoljQueryExt.js
 //	JSmolCore.js
 //  JSmolApplet.js
 //  JSmolApi.js
-//  j2s/j2sjmol.js    (Clazz and associated classes)
+//  j2sjmol.js    (Clazz and associated classes)
 // prior to JSmol.js
 
 // these two:
@@ -123,9 +123,9 @@
         this._getCanvas(false);      
       if (this._defaultModel)
         Jmol._search(this, this._defaultModel);
-      //if (this._readyScript) {
-        //this._script(this._readyScript);
-      //}
+      // if (this._readyScript) {
+        // this._script(this._readyScript);
+      // }
       this._showInfo(false);
     };                      
 
@@ -171,7 +171,7 @@
 				es.push([this, this.__addExportHook, null, "addExportHook"])
 			}			 			
 			if (Jmol.debugCode) {
-        //es.push([this.__checkLoadStatus, null,"checkLoadStatus"])
+        // es.push([this.__checkLoadStatus, null,"checkLoadStatus"])
         es.push([this, Jmol.__loadClass, "J.appletjs.Jmol", "load Jmol"])
       }
 			es.push([this, this.__createApplet, null,"createApplet"])
@@ -187,15 +187,15 @@
 			Jmol.__nextExecution();
 		};
 
-//	  proto.__checkLoadStatus = function(applet) {
-//	  return;
-//		  if (J.appletjs && J.appletjs.Jmol) {
-//		    Jmol.__nextExecution();
-//		  	return;
-//		}
-//			// spin wheels until core.z.js is processed
-//			setTimeout(applet._id + ".__checkLoadStatus(" + applet._id + ")",100);
-//		}
+// proto.__checkLoadStatus = function(applet) {
+// return;
+// if (J.appletjs && J.appletjs.Jmol) {
+// Jmol.__nextExecution();
+// return;
+// }
+// // spin wheels until core.z.js is processed
+// setTimeout(applet._id + ".__checkLoadStatus(" + applet._id + ")",100);
+// }
 
 
 		proto.__addExportHook = function(applet) {
@@ -220,7 +220,7 @@
 			if (applet._is2D)
 				viewerOptions.put("display",applet._id + "_canvas2d");
   			
-			//viewerOptions.put("repaintManager", "J.render");
+			// viewerOptions.put("repaintManager", "J.render");
 			viewerOptions.put("documentBase", document.location.href);
 			var base = document.location.href.split("?")[0].split("#")[0].split("/")
 			base[base.length - 1] = window["j2s.lib"].base
@@ -247,7 +247,7 @@
 				var d = Jmol._getElement(this, (this._is2D ? "canvas2d" : "canvas"));
 				this._applet.viewer.setScreenDimension(
 				d.width, d.height);
-//				Math.floor(Jmol.$(this, "appletdiv").height()));
+// Math.floor(Jmol.$(this, "appletdiv").height()));
 
 		};
 
@@ -257,23 +257,16 @@
 			this._showInfo(false);
 		};
 	
-/*		
-		proto._showInfo = function(tf) {
-				Jmol._getElement(this, "infoheaderspan").innerHTML = this._infoHeader;
-			if (this._info)
-				Jmol._getElement(this, "infodiv").innerHTML = this._info;
-			if ((!this._isInfoVisible) == (!tf))
-				return;
-			this._isInfoVisible = tf;
-			if (this._infoObject) {
-				this._infoObject._showInfo(tf);
-			} else {
-				Jmol._getElement(this, "infotablediv").style.display = (tf ? "block" : "none");
-  			Jmol._getElement(this, "infoheaderdiv").style.display = (tf ? "block" : "none");
-			}
-  		this._show(!tf);
-		}
-*/		
+/*
+ * proto._showInfo = function(tf) { Jmol._getElement(this,
+ * "infoheaderspan").innerHTML = this._infoHeader; if (this._info)
+ * Jmol._getElement(this, "infodiv").innerHTML = this._info; if
+ * ((!this._isInfoVisible) == (!tf)) return; this._isInfoVisible = tf; if
+ * (this._infoObject) { this._infoObject._showInfo(tf); } else {
+ * Jmol._getElement(this, "infotablediv").style.display = (tf ? "block" :
+ * "none"); Jmol._getElement(this, "infoheaderdiv").style.display = (tf ?
+ * "block" : "none"); } this._show(!tf); }
+ */		
 		proto._show = function(tf) {
 			Jmol._getElement(this,"appletdiv").style.display = (tf ? "block" : "none");
 			if (tf)
@@ -283,7 +276,8 @@
 		proto._canScript = function(script) {return true};
 		
 		proto._delay = function(eval, sc, millis) {
-		// does not take into account that scripts may be added after this and need to be cached.
+		// does not take into account that scripts may be added after this and
+		// need to be cached.
 			this._delayID = setTimeout(function(){eval.resumeEval(sc,false)}, millis);		
 		}
 		
@@ -363,13 +357,13 @@
 	
   Jmol._repaint = function(applet, asNewThread) {
     // asNewThread: true is from RepaintManager.repaintNow()
-    //              false is from Repaintmanager.requestRepaintAndWait()
+    // false is from Repaintmanager.requestRepaintAndWait()
     //
 		
-    //alert("_repaint " + arguments.callee.caller.caller.exName)
+    // alert("_repaint " + arguments.callee.caller.caller.exName)
 		if (!applet._applet)return;
 
-		//asNewThread = false;
+		// asNewThread = false;
 		var container = Jmol.$(applet, "appletdiv");
 		var w = Math.round(container.width());
 		var h = Math.round(container.height());
@@ -384,14 +378,13 @@
   	} else {
   		applet._applet.viewer.updateJS(0,0);
   	}
-  	//System.out.println(applet._applet.fullName)
+  	// System.out.println(applet._applet.fullName)
 	}
 
 	Jmol._getHiddenCanvas = function(applet, id, width, height, forceNew) {
   	id = applet._id + "_" + id;
 		var d = document.getElementById(id);
     if (d && forceNew) {
-      //$("body").removeChild(d);
       d = null;
     }
 		if (!d)
@@ -399,10 +392,9 @@
 	    // for some reason both these need to be set, or maybe just d.width?
 		d.width = d.style.width = width;
 		d.height = d.style.height = height;
-		//d.style.display = "none";
+		// d.style.display = "none";
 		if (d.id != id) {
 			d.id = id;
-	  	//$("body").append(d);
 	  }
 	  return d;
 	}
@@ -443,60 +435,25 @@
     		}
       };
 			ClazzLoader.packageClasspath ("java", null, true);
-			ClazzLoader.setPrimaryFolder (applet._j2sPath); // where org.jsmol.test.Test is to be found
-			ClazzLoader.packageClasspath (applet._j2sPath); // where the other files are to be found
-  		//if (!Jmol.debugCode)
+			ClazzLoader.setPrimaryFolder (applet._j2sPath); // where
+															// org.jsmol.test.Test
+															// is to be found
+			ClazzLoader.packageClasspath (applet._j2sPath); // where the other
+															// files are to be
+															// found
+  		// if (!Jmol.debugCode)
 			  return;
 		}
 		Jmol.__nextExecution();
 	};
 
-	Jmol._doAjax = function(url, postOut, bytesOut) {
-    url = url.toString();
-    
-    if (bytesOut != null) {
-    	bytesOut = J.io.Base64.getBase64(bytesOut).toString();
-    	var filename = url.substring(url.lastIndexOf("/") + 1);
-    	var mimetype = (filename.indexOf(".png") >= 0 ? "image/png" : filename.indexOf(".jpg") >= 0 ? "image/jpg" : "");
-    	Jmol._saveFile(filename, mimetype, bytesOut, "base64");
-    	return "OK";
-    }
-    if (postOut)
-      url += "?POST?" + postOut;
-    var data = Jmol._getFileData(url)
-    return Jmol._processData(data, Jmol._isBinaryUrl(url));
-	}
-
-  Jmol._processData = function(data, isBinary) {
-    if (typeof data == "undefined") {
-      data = "";
-      isBinary = false;
-    }
-    isBinary &= Jmol._canSyncBinary();
-    if (!isBinary)
-  		return J.util.SB.newS(data);
-  	var b;
-		if (Clazz.instanceOf(data, self.ArrayBuffer)) {
-			data = new Uint8Array(data);
-    	b = Clazz.newByteArray(data.length, 0);
-	    for (var i = data.length; --i >= 0;)
-  	    b[i] = data[i];
-    //alert("Jmol._processData len=" + b.length + " b[0-5]=" + b[0] + " " + b[1]+ " " + b[2] + " " + b[3]+ " " + b[4] + " " + b[5])
-    	return b;
-						
-		}
-    b = Clazz.newByteArray(data.length, 0);
-    for (var i = data.length; --i >= 0;)
-      b[i] = data.charCodeAt(i) & 0xFF;
-    //alert("Jmol._processData len=" + b.length + " b[0-5]=" + b[0] + " " + b[1]+ " " + b[2] + " " + b[3]+ " " + b[4] + " " + b[5])
-    return b;
-  };
-
-
   Jmol._loadImage = function(platform, echoNameAndPath, bytes, fOnload, image) {
-  // bytes would be from a ZIP file -- will have to reflect those back from server as an image after conversion to base64
-  // ah, but that's a problem, because that image would be needed to be posted, but you can't post an image call. 
-  // so we would have to go with <image data:> which does not work in all browsers. Hmm. 
+  // bytes would be from a ZIP file -- will have to reflect those back from
+	// server as an image after conversion to base64
+  // ah, but that's a problem, because that image would be needed to be
+	// posted, but you can't post an image call.
+  // so we would have to go with <image data:> which does not work in all
+	// browsers. Hmm.
   
     var path = echoNameAndPath[1];
     

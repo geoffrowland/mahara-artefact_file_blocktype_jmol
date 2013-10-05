@@ -223,7 +223,7 @@ var a1 = this.getAtom (1);
 var a2 = this.getAtom (2);
 var isDC = (!isPercent && J.modelset.Measurement.nmrType (units) == 1);
 this.type = (isPercent ? "percent" : isDC ? "dipoleCouplingConstant" : "J-CouplingConstant");
-dist = (isPercent ? dist / (a1.getVanderwaalsRadiusFloat (this.viewer, J.constant.EnumVdw.AUTO) + a2.getVanderwaalsRadiusFloat (this.viewer, J.constant.EnumVdw.AUTO)) : isDC ? this.viewer.getNMRCalculation ().getDipolarConstantHz (a1, a2) : this.viewer.getNMRCalculation ().getJCouplingHz (a1, a2, units, null));
+dist = (isPercent ? dist / (a1.getVanderwaalsRadiusFloat (this.viewer, J.constant.EnumVdw.AUTO) + a2.getVanderwaalsRadiusFloat (this.viewer, J.constant.EnumVdw.AUTO)) : isDC ? this.viewer.getNMRCalculation ().getDipolarConstantHz (a1, a2) : this.viewer.getNMRCalculation ().getIsoOrAnisoHz (true, a1, a2, units, null));
 this.$isValid = !Float.isNaN (dist);
 if (isPercent) units = "pm";
 }}if (units.equals ("nm")) return (andRound ? Math.round (dist * 100) / 1000 : dist / 10);
@@ -396,10 +396,12 @@ $_M(c$, "isMin",
 function (htMin) {
 var a1 = this.getAtom (1);
 var a2 = this.getAtom (2);
-var d = a2.distanceSquared (a1);
-var key = (a1.index < a2.index ? a1.getAtomName () + a2.getAtomName () : a2.getAtomName () + a1.getAtomName ());
+var d = Clazz.floatToInt (a2.distanceSquared (a1) * 100);
+var n1 = a1.getAtomName ();
+var n2 = a2.getAtomName ();
+var key = (n1.compareTo (n2) < 0 ? n1 + n2 : n2 + n1);
 var min = htMin.get (key);
-return (min != null && d == min.floatValue ());
+return (min != null && d == min.intValue ());
 }, "java.util.Map");
 Clazz.defineStatics (c$,
 "NMR_NOT", 0,

@@ -102,7 +102,7 @@ plane.set (vNorm.x, vNorm.y, vNorm.z, w);
 }, "J.util.P3,J.util.P3,J.util.P3,J.util.V3,J.util.V3,J.util.V3,J.util.P4");
 c$.getPlaneThroughPoint = $_M(c$, "getPlaneThroughPoint", 
 function (pt, normal, plane) {
-plane.set (normal.x, normal.y, normal.z, -normal.dot (J.util.V3.newV (pt)));
+plane.set (normal.x, normal.y, normal.z, -normal.dot (pt));
 }, "J.util.P3,J.util.V3,J.util.P4");
 c$.distanceToPlane = $_M(c$, "distanceToPlane", 
 function (plane, pt) {
@@ -269,7 +269,7 @@ var n = centerAndPoints[0].length - 1;
 if (doReport) for (var i = 1; i <= n; i++) {
 var aij = centerAndPoints[0][i];
 var bij = centerAndPoints[1][i];
-if (Clazz.instanceOf (aij, J.modelset.Atom)) J.util.Logger.info (" atom 1 " + (aij).getInfo () + "\tatom 2 " + (bij).getInfo ());
+if (Clazz.instanceOf (aij, J.modelset.Atom) && Clazz.instanceOf (bij, J.modelset.Atom)) J.util.Logger.info (" atom 1 " + (aij).getInfo () + "\tatom 2 " + (bij).getInfo ());
  else break;
 }
 if (n < 2) return q;
@@ -331,8 +331,7 @@ var ptAnew =  new J.util.P3 ();
 for (var i = n + 1; --i >= 1; ) {
 ptAnew.setT (ptsA[i]);
 ptAnew.sub (cA);
-q.transformP2 (ptAnew, ptAnew);
-ptAnew.add (cB);
+q.transformP2 (ptAnew, ptAnew).add (cB);
 sum2 += ptAnew.distanceSquared (ptsB[i]);
 }
 return Math.sqrt (sum2 / n);

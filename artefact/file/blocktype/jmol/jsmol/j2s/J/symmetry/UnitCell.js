@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.symmetry");
-Clazz.load (["J.util.SimpleUnitCell", "$.P3", "J.viewer.JC"], "J.symmetry.UnitCell", ["J.util.BoxInfo", "$.Matrix4f", "$.Tensor"], function () {
+Clazz.load (["J.util.SimpleUnitCell", "$.P3", "J.viewer.JC"], "J.symmetry.UnitCell", ["java.lang.Float", "J.util.BoxInfo", "$.Escape", "$.Matrix4f", "$.Tensor"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vertices = null;
 this.cartesianOffset = null;
@@ -47,17 +47,16 @@ function (pt, offset) {
 if (this.matrixCartesianToFractional == null) return;
 if (offset == null) {
 this.matrixCartesianToFractional.transform (pt);
-switch (this.dimension) {
-case 3:
-pt.z = J.symmetry.UnitCell.toFractionalX (pt.z);
-case 2:
-pt.y = J.symmetry.UnitCell.toFractionalX (pt.y);
-case 1:
-pt.x = J.symmetry.UnitCell.toFractionalX (pt.x);
-}
+this.unitize (pt);
 this.matrixFractionalToCartesian.transform (pt);
 } else {
 this.matrixCtoFAbsolute.transform (pt);
+this.unitize (pt);
+pt.add (offset);
+this.matrixFtoCAbsolute.transform (pt);
+}}, "J.util.P3,J.util.P3");
+$_M(c$, "unitize", 
+function (pt) {
 switch (this.dimension) {
 case 3:
 pt.z = J.symmetry.UnitCell.toFractionalX (pt.z);
@@ -66,9 +65,7 @@ pt.y = J.symmetry.UnitCell.toFractionalX (pt.y);
 case 1:
 pt.x = J.symmetry.UnitCell.toFractionalX (pt.x);
 }
-pt.add (offset);
-this.matrixFtoCAbsolute.transform (pt);
-}}, "J.util.P3,J.util.P3");
+}, "J.util.P3");
 $_M(c$, "setAllFractionalRelative", 
 function (TF) {
 this.allFractionalRelative = TF;
@@ -157,7 +154,7 @@ if (parBorU == null) return null;
 if (parBorU[0] == 0) {
 var f = parBorU[7];
 var eigenValues = [f, f, f];
-return J.util.Tensor.getTensorFromEigenVectors (J.symmetry.UnitCell.unitVectors, eigenValues, "iso");
+return J.util.Tensor.getTensorFromEigenVectors (J.symmetry.UnitCell.unitVectors, eigenValues, "iso", "Uiso=" + f);
 }var Bcart =  Clazz.newDoubleArray (6, 0);
 var ortepType = Clazz.floatToInt (parBorU[6]);
 if (ortepType == 12) {
@@ -185,7 +182,7 @@ Bcart[2] = this.c * this.c * this.cB_ * this.cB_ * B33;
 Bcart[3] = 2 * this.b * this.b * this.cosGamma * this.sinGamma * B22 + 2 * this.c * this.c * this.cA_ * this.cosBeta * B33 + this.a * this.b * this.sinGamma * B12 + this.b * this.c * (this.cA_ * this.cosGamma + this.sinGamma * this.cosBeta) * B23 + this.a * this.c * this.cA_ * B13;
 Bcart[4] = 2 * this.c * this.c * this.cB_ * this.cosBeta * B33 + this.b * this.c * this.cosGamma * B23 + this.a * this.c * this.cB_ * B13;
 Bcart[5] = 2 * this.c * this.c * this.cA_ * this.cB_ * B33 + this.b * this.c * this.cB_ * this.sinGamma * B23;
-}return J.util.Tensor.getTensorFromThermalEquation (Bcart);
+}return J.util.Tensor.getTensorFromThermalEquation (Bcart, J.util.Escape.eAF (parBorU));
 }, "~A");
 $_M(c$, "getCanonicalCopy", 
 function (scale) {
@@ -238,6 +235,14 @@ function () {
 var m = this.matrixFractionalToCartesian;
 return [J.util.P3.newP (this.cartesianOffset), J.util.P3.new3 (m.m00, m.m10, m.m20), J.util.P3.new3 (m.m01, m.m11, m.m21), J.util.P3.new3 (m.m02, m.m12, m.m22)];
 });
+$_M(c$, "isSameAs", 
+function (uc) {
+if (uc.notionalUnitcell.length != this.notionalUnitcell.length) return false;
+for (var i = this.notionalUnitcell.length; --i >= 0; ) if (this.notionalUnitcell[i] != uc.notionalUnitcell[i] && !(Float.isNaN (this.notionalUnitcell[i]) && Float.isNaN (uc.notionalUnitcell[i]))) return false;
+
+if (this.fractionalOffset.distanceSquared (uc.fractionalOffset) != 0) return false;
+return true;
+}, "J.symmetry.UnitCell");
 Clazz.defineStatics (c$,
 "twoP2", 19.739208802178716);
 c$.unitVectors = c$.prototype.unitVectors = [J.viewer.JC.axisX, J.viewer.JC.axisY, J.viewer.JC.axisZ];

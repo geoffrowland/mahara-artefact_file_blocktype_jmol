@@ -332,7 +332,80 @@
             <mimetype>application/pdf</mimetype>
         </mimetypes>
     </filetype>
-
+    <!-- Chemical formats -->
+    <filetype>
+        <description>alc</description>
+        <mimetypes>
+            <mimetype>chemical/x-alchemy</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>cif</description>
+        <mimetypes>
+            <mimetype>chemical/x-cif</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>cml</description>
+        <mimetypes>
+            <mimetype>chemical/x-cml</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>hin</description>
+        <mimetypes>
+            <mimetype>chemical/x-hin</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>mcif</description>
+        <mimetypes>
+            <mimetype>chemical/x-mmcif</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>mol</description>
+        <mimetypes>
+            <mimetype>chemical/x-mdl-molfile</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>mol2</description>
+        <mimetypes>
+            <mimetype>chemical/x-mol2</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>pdb</description>
+        <mimetypes>
+            <mimetype>chemical/x-pdb</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>pse</description>
+        <mimetypes>
+            <mimetype>chemical/x-pse</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>sdf</description>
+        <mimetypes>
+            <mimetype>chemical/x-mdl-sdfile</mimetype>
+        </mimetypes>
+    </filetype>
+    <filetype>
+        <description>xyz</description>
+        <mimetypes>
+            <mimetype>chemical/x-xyz</mimetype>
+        </mimetypes>
+    </filetype>
+    <!-- FreeMind -->
+    <filetype>
+        <description>mm</description>
+        <mimetypes>
+            <mimetype>application/x-freemind</mimetype>
+        </mimetypes>
+    </filetype>
     <!-- General types -->
     <filetype>
         <description>application</description>

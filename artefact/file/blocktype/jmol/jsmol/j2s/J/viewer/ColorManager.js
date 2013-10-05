@@ -145,6 +145,7 @@ case 10:
 var chain = atom.getChainID ();
 if (chain < 0) chain = 0;
  else if (chain >= 256) chain -= 256;
+chain &= 0x1F;
 chain = chain % J.viewer.JC.argbsChainAtom.length;
 argb = (atom.isHetero () ? J.viewer.JC.argbsChainHetero : J.viewer.JC.argbsChainAtom)[chain];
 break;

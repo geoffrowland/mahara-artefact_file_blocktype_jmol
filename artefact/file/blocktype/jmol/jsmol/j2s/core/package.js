@@ -1,5 +1,8 @@
 // BH 12/15/2012 1:56:28 PM  adds corezip.z.js and corebio.z.js
 // later additions include coresym.z.js, coresurface.z.js, coremenu.z.js
+
+// NOTE: Any changes here must also be reflected in buildtojs.xml
+
 if (!window["java.registered"])
  window["java.registered"] = false;
 
@@ -62,9 +65,10 @@ var	basefile = base + "core.z.js";
     "$.ScriptFunction", 
     "$.ScriptInterruption", 
     "$.ScriptMathProcessor", 
-    "J.thread.CommandWatcherThread", 
+    "$.CommandWatcherThread", 
     "$.ScriptQueueThread", 
-    "J.viewer.ScriptManager" 
+    "$.ScriptDelayThread", 
+    "$.ScriptManager" 
 	]);
 	
 	ClazzLoader.jarClasspath (base + "corestate.z.js",	[  
@@ -183,7 +187,7 @@ var	basefile = base + "core.z.js";
 	]);
 	
 	ClazzLoader.jarClasspath (base + "corebio.z.js",	[
-		"J.adapter.readers.cifpdb.PdbReader",
+		"J.adapter.readers.pdb.PdbReader",
 		"J.adapter.smarter.Structure",
 		"J.api.JmolBioResolver",
 		"J.modelsetbio.Resolver",
@@ -207,15 +211,21 @@ var	basefile = base + "core.z.js";
 		"$.PhosphorusPolymer",
 		"J.shapebio.BioShape",
 		"$.BioShapeCollection",
+		"$.Ribbons",	
+		"$.MeshRibbons",
+		"$.Strands",
 		"$.Rockets",
 		"$.Cartoon",
-    "$.Backbone",
-    "$.Trace",
+	    "$.Backbone",
+	    "$.Trace",
 		"J.renderbio.BioShapeRenderer",
+		"$.StrandsRenderer",
+		"$.RibbonsRenderer",
+		"$.MeshRibbonsRenderer",
 		"$.RocketsRenderer",
 		"$.CartoonRenderer",
-    "$.BackboneRenderer",
-    "$.TraceRenderer"
+	    "$.BackboneRenderer",
+	    "$.TraceRenderer"
 	]);
 
 

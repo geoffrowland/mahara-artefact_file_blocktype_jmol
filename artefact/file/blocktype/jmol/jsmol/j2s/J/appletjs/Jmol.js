@@ -104,7 +104,7 @@ J.i18n.GT.setDoTranslate (false);
 J.util.Logger.warn ("Note -- language translation disabled");
 }if (!this.getBooleanValue ("popupMenu", true)) this.viewer.getProperty ("DATA_API", "disablePopupMenu", null);
 var scriptParam = this.getValue ("script", "");
-this.viewer.popHoldRepaint ();
+this.viewer.popHoldRepaint ("applet init");
 if (scriptParam.length > 0) this.scriptProcessor (scriptParam, null, 1);
 this.jmolReady ();
 }, $fz.isPrivate = true, $fz));
@@ -301,6 +301,7 @@ case J.constant.EnumCallback.LOADSTRUCT:
 case J.constant.EnumCallback.MEASURE:
 case J.constant.EnumCallback.MESSAGE:
 case J.constant.EnumCallback.PICK:
+case J.constant.EnumCallback.STRUCTUREMODIFIED:
 case J.constant.EnumCallback.SYNC:
 case J.constant.EnumCallback.SCRIPT:
 return true;
@@ -391,6 +392,9 @@ d = ((c = this.b$["J.appletjs.Jmol"].b$.get ((a = J.constant.EnumCallback.MESSAG
 }this.output (f);
 this.showStatus (f);
 break;
+case J.constant.EnumCallback.STRUCTUREMODIFIED:
+this.notifyStructureModified ((b[1]).intValue (), (b[2]).intValue ());
+break;
 case J.constant.EnumCallback.SYNC:
 this.sendScript (f, b[2], true, d);
 return;
@@ -414,6 +418,9 @@ throw e;
 }
 }
 }, "J.constant.EnumCallback,~A");
+$_M(c$, "notifyStructureModified", 
+($fz = function (a, b) {
+}, $fz.isPrivate = true, $fz), "~N,~N");
 $_M(c$, "output", 
 ($fz = function (a) {
 if (this.b$["J.appletjs.Jmol"].outputBuffer != null && a != null) this.b$["J.appletjs.Jmol"].outputBuffer.append (a).appendC ('\n');

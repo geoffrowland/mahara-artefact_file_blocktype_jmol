@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.util");
-Clazz.load (null, "J.util.Parser", ["java.lang.Float", "J.util.ArrayUtil", "$.Logger", "$.TextFormat"], function () {
+Clazz.load (null, "J.util.Parser", ["java.lang.Character", "$.Float", "J.util.ArrayUtil", "$.Logger", "$.TextFormat"], function () {
 c$ = Clazz.declareType (J.util, "Parser");
 c$.parseStringInfestedFloatArray = $_M(c$, "parseStringInfestedFloatArray", 
 function (str, bs, data) {
@@ -212,7 +212,6 @@ return J.util.Parser.parseFloatChecked (str, ichMax, next, false);
 c$.parseFloatChecked = $_M(c$, "parseFloatChecked", 
 ($fz = function (str, ichMax, next, isStrict) {
 var digitSeen = false;
-var value = 0;
 var ich = next[0];
 if (isStrict && str.indexOf ('\n') != str.lastIndexOf ('\n')) return NaN;
 while (ich < ichMax && J.util.Parser.isWhiteSpace (str, ich)) ++ich;
@@ -221,44 +220,66 @@ var negative = false;
 if (ich < ichMax && str.charAt (ich) == '-') {
 ++ich;
 negative = true;
-}var ch = String.fromCharCode (0);
-while (ich < ichMax && (ch = str.charAt (ich)) >= '0' && ch <= '9') {
-value = value * 10 + (ch.charCodeAt (0) - 48);
+}var ch = 0;
+var ival = 0;
+var ival2 = 0;
+while (ich < ichMax && (ch = str.charCodeAt (ich)) >= 48 && ch <= 57) {
+ival = (ival * 10) + (ch - 48) * 1;
 ++ich;
 digitSeen = true;
 }
 var isDecimal = false;
-if (ch == '.') {
-isDecimal = true;
 var iscale = 0;
-while (++ich < ichMax && (ch = str.charAt (ich)) >= '0' && ch <= '9') {
-if (iscale < J.util.Parser.decimalScale.length) value += (ch.charCodeAt (0) - 48) * J.util.Parser.decimalScale[iscale];
-++iscale;
+var nzero = (ival == 0 ? -1 : 0);
+if (ch == 46) {
+isDecimal = true;
+while (++ich < ichMax && (ch = str.charCodeAt (ich)) >= 48 && ch <= 57) {
 digitSeen = true;
-}
+if (nzero < 0) {
+if (ch == 48) {
+nzero--;
+continue;
+}nzero = -nzero;
+}if (iscale < J.util.Parser.decimalScale.length) {
+ival2 = (ival2 * 10) + (ch - 48) * 1;
+iscale++;
+}}
+}var value;
+if (!digitSeen) {
+value = NaN;
+} else if (ival2 > 0) {
+value = ival2 * J.util.Parser.decimalScale[iscale - 1];
+if (nzero > 1) {
+if (nzero - 2 < J.util.Parser.decimalScale.length) {
+value *= J.util.Parser.decimalScale[nzero - 2];
+} else {
+value *= Math.pow (10, 1 - nzero);
+}} else {
+value += ival;
+}} else {
+value = ival;
 }var isExponent = false;
-if (!digitSeen) value = NaN;
- else if (negative) value = -value;
-if (ich < ichMax && (ch == 'E' || ch == 'e' || ch == 'D')) {
+if (ich < ichMax && (ch == 69 || ch == 101 || ch == 68)) {
 isExponent = true;
 if (++ich >= ichMax) return NaN;
-ch = str.charAt (ich);
-if ((ch == '+') && (++ich >= ichMax)) return NaN;
+ch = str.charCodeAt (ich);
+if ((ch == 43) && (++ich >= ichMax)) return NaN;
 next[0] = ich;
 var exponent = J.util.Parser.parseIntChecked (str, ichMax, next);
 if (exponent == -2147483648) return NaN;
-if (exponent > 0) value *= ((exponent < J.util.Parser.tensScale.length) ? J.util.Parser.tensScale[exponent - 1] : Math.pow (10, exponent));
- else if (exponent < 0) value *= ((-exponent < J.util.Parser.decimalScale.length) ? J.util.Parser.decimalScale[-exponent - 1] : Math.pow (10, exponent));
+if (exponent > 0 && exponent <= J.util.Parser.tensScale.length) value *= J.util.Parser.tensScale[exponent - 1];
+ else if (exponent < 0 && -exponent <= J.util.Parser.decimalScale.length) value *= J.util.Parser.decimalScale[-exponent - 1];
+ else if (exponent != 0) value *= Math.pow (10, exponent);
 } else {
 next[0] = ich;
-}if (value == -Infinity) value = -3.4028235E38;
- else if (value == Infinity) value = 3.4028235E38;
+}if (negative) value = -value;
+if (value == Infinity) value = 3.4028235E38;
 return (!isStrict || (!isExponent || isDecimal) && J.util.Parser.checkTrailingText (str, next[0], ichMax) ? value : NaN);
 }, $fz.isPrivate = true, $fz), "~S,~N,~A,~B");
 c$.checkTrailingText = $_M(c$, "checkTrailingText", 
 ($fz = function (str, ich, ichMax) {
 var ch;
-while (ich < ichMax && ((ch = str.charAt (ich)) == ' ' || ch == '\t' || ch == '\n' || ch == ';')) ++ich;
+while (ich < ichMax && (Character.isWhitespace (ch = str.charAt (ich)) || ch == ';')) ++ich;
 
 return (ich == ichMax);
 }, $fz.isPrivate = true, $fz), "~S,~N,~N");
@@ -285,11 +306,11 @@ var ch;
 while (ich < ichMax && J.util.Parser.isWhiteSpace (str, ich)) ++ich;
 
 var negative = false;
-if (ich < ichMax && str.charAt (ich) == '-') {
+if (ich < ichMax && str.charCodeAt (ich) == 45) {
 negative = true;
 ++ich;
-}while (ich < ichMax && (ch = str.charAt (ich)) >= '0' && ch <= '9') {
-value = value * 10 + (ch.charCodeAt (0) - 48);
+}while (ich < ichMax && (ch = str.charCodeAt (ich)) >= 48 && ch <= 57) {
+value = value * 10 + (ch - 48);
 digitSeen = true;
 ++ich;
 }
@@ -437,6 +458,6 @@ return this.dVal(s);
 }}, "~S");
 Clazz.defineStatics (c$,
 "FLOAT_MIN_SAFE", 2E-45,
-"decimalScale", [0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001],
+"decimalScale", [0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001, 0.000000001],
 "tensScale", [10, 100, 1000, 10000, 100000, 1000000]);
 });

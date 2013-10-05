@@ -449,10 +449,18 @@ abstract class ArtefactTypeFileBase extends ArtefactType {
             $where .= '
             AND a.parent = ? ';
             $phvals[] = $parentfolderid;
+            $parent = artefact_instance_from_id($parentfolderid);
+            $can_view_parent = $USER->can_view_artefact($parent);
+            if (!$can_view_parent) {
+                return null;
+            }
+            $can_edit_parent = $USER->can_edit_artefact($parent);
         }
         else {
             $where .= '
             AND a.parent IS NULL';
+            $can_edit_parent = true;
+            $can_view_parent = true;
         }
 
         $filedata = get_records_sql_assoc($select . $from . $where . $groupby, $phvals);
@@ -468,8 +476,28 @@ abstract class ArtefactTypeFileBase extends ArtefactType {
                 if ($item->size) { // Doing this here now for non-js users
                     $item->size = ArtefactTypeFile::short_size($item->size, true);
                 }
-                if ($group && $item->author == $USER->get('id')) {
-                    $item->can_edit = 1;    // This will show the delete, edit buttons in filelist, but doesn't change the actual permissions in the checkbox
+                if ($group) {
+                    // site public files
+                    if ($institution == 'mahara' && ArtefactTypeFolder::admin_public_folder_id() == $parentfolderid) {
+                        $item->can_edit = 0;
+                        $item->can_view = 1;
+                        $item->can_republish = 1;
+                    }
+                    else if (!empty($item->author) && $item->author == $USER->get('id')) {
+                        $item->can_edit = 1;
+                        $item->can_view = 1;
+                        $item->can_republish = 1;
+                    }
+                    else {
+                        $item->can_edit = $can_edit_parent && $item->can_edit;
+                        $item->can_view = $can_view_parent && $item->can_view;
+                        $item->can_republish = $can_view_parent && $item->can_republish;
+                    }
+                }
+                if (!empty($item->author)) {
+                    if ($group && $item->author == $USER->get('id')) {
+                        $item->can_edit = 1;    // This will show the delete, edit buttons in filelist, but doesn't change the actual permissions in the checkbox
+                    }
                 }
             }
             $where = 'artefact IN (' . join(',', array_keys($filedata)) . ')';
@@ -890,6 +918,35 @@ class ArtefactTypeFile extends ArtefactTypeFileBase {
 
         if (empty($data->filetype) || $data->filetype == 'application/octet-stream') {
             $data->filetype = $data->guess;
+        }
+        
+        // The browser may have been wrong, so use file extension to force some mime-types.
+        $ext = $data->oldextension;
+        switch ($ext) {
+            case 'mm': $data->filetype = 'application/x-freemind';
+            break;
+            case 'alc': $data->filetype = 'chemical/x-alchemy';
+            break;
+            case 'cif': $data->filetype = 'chemical/x-cif';
+            break;
+            case 'cml': $data->filetype = 'chemical/x-cml';
+            break;
+            case 'hin': $data->filetype = 'chemical/x-hin';
+            break;
+            case 'mcif': $data->filetype = 'chemical/x-mmcif';
+            break;
+            case 'mol': $data->filetype = 'chemical/x-mdl-molfile';
+            break;
+            case 'mol2': $data->filetype = 'chemical/x-mol2';
+            break;
+            case 'pdb': $data->filetype = 'chemical/x-pdb';
+            break;
+            case 'pse': $data->filetype = 'chemical/x-pse';
+            break;
+            case 'sdf': $data->filetype = 'chemical/x-mdl-sdfile';
+            break;
+            case 'xyz': $data->filetype = 'chemical/x-xyz';
+            break;
         }
 
         foreach (array('video', 'audio', 'archive') as $artefacttype) {

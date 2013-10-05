@@ -44,7 +44,7 @@ var index = this.meshCount++;
 this.meshes = this.isomeshes = J.util.ArrayUtil.ensureLength (this.isomeshes, this.meshCount * 2);
 this.currentMesh = this.thisMesh = this.isomeshes[index] = (m == null ?  new J.shapesurface.IsosurfaceMesh (thisID, this.colix, index) : m);
 this.currentMesh.index = index;
-this.sg.setJvxlData (this.jvxlData = this.thisMesh.jvxlData);
+if (this.sg != null) this.sg.setJvxlData (this.jvxlData = this.thisMesh.jvxlData);
 }, "~S,J.shape.Mesh");
 $_M(c$, "initShape", 
 function () {
@@ -967,6 +967,7 @@ return V;
 $_M(c$, "addMeshInfo", 
 function (mesh, info) {
 info.put ("ID", (mesh.thisID == null ? "<noid>" : mesh.thisID));
+info.put ("visible", Boolean.$valueOf (mesh.visible));
 info.put ("vertexCount", Integer.$valueOf (mesh.vertexCount));
 if (mesh.calculatedVolume != null) info.put ("volume", mesh.calculatedVolume);
 if (mesh.calculatedArea != null) info.put ("area", mesh.calculatedArea);
@@ -1039,7 +1040,7 @@ throw e;
 Clazz.overrideMethod (c$, "checkObjectClicked", 
 function (x, y, action, bsVisible, drawPicking) {
 if (!drawPicking) return null;
-if (!this.viewer.isBound (action, 38)) return null;
+if (!this.viewer.isBound (action, 18)) return null;
 var dmin2 = 100;
 if (this.gdata.isAntialiased ()) {
 x <<= 1;

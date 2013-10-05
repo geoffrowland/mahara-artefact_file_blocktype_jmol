@@ -30,6 +30,7 @@ this.doRender = false;
 this.volumeRender = false;
 this.bsPolygons = null;
 this.isTranslucentInherit = false;
+this.renderLow = false;
 this.bsPolygonsToExport = null;
 Clazz.instantialize (this, arguments);
 }, J.render, "MeshRenderer", J.render.ShapeRenderer);
@@ -109,7 +110,8 @@ if (this.normixes == null || this.vertices == null) return false;
 this.haveBsDisplay = (this.mesh.bsDisplay != null);
 this.selectedPolyOnly = (this.isGhostPass || this.mesh.bsSlabDisplay != null);
 this.bsPolygons = (this.isGhostPass ? this.mesh.bsSlabGhost : this.selectedPolyOnly ? this.mesh.bsSlabDisplay : null);
-this.frontOnly = !this.viewer.getSlabEnabled () && this.mesh.frontOnly && !this.mesh.isTwoSided && !this.selectedPolyOnly;
+this.renderLow = (!this.isExport && !this.viewer.checkMotionRendering (1073742018));
+this.frontOnly = this.renderLow || !this.viewer.getSlabEnabled () && this.mesh.frontOnly && !this.mesh.isTwoSided && !this.selectedPolyOnly;
 this.screens = this.viewer.allocTempScreens (this.vertexCount);
 if (this.frontOnly) this.transformedVectors = this.g3d.getTransformedVertexVectors ();
 if (this.transformedVectors == null) this.frontOnly = false;
@@ -134,9 +136,9 @@ this.render2b (generateSet);
 $_M(c$, "render2b", 
 function (generateSet) {
 if (!this.g3d.setColix (this.isGhostPass ? this.mesh.slabColix : this.colix)) return;
-if (this.mesh.showPoints || this.mesh.polygonCount == 0) this.renderPoints ();
-if (this.isGhostPass ? this.mesh.slabMeshType == 1073742018 : this.mesh.drawTriangles) this.renderTriangles (false, this.mesh.showTriangles, false);
-if (this.isGhostPass ? this.mesh.slabMeshType == 1073741938 : this.mesh.fillTriangles) this.renderTriangles (true, this.mesh.showTriangles, generateSet);
+if (this.renderLow || this.mesh.showPoints || this.mesh.polygonCount == 0) this.renderPoints ();
+if (!this.renderLow && (this.isGhostPass ? this.mesh.slabMeshType == 1073742018 : this.mesh.drawTriangles)) this.renderTriangles (false, this.mesh.showTriangles, false);
+if (!this.renderLow && (this.isGhostPass ? this.mesh.slabMeshType == 1073741938 : this.mesh.fillTriangles)) this.renderTriangles (true, this.mesh.showTriangles, generateSet);
 }, "~B");
 $_M(c$, "renderPoints", 
 function () {
@@ -154,8 +156,12 @@ for (var j = p.length - 1; --j >= 0; ) {
 var pt = p[j];
 if (bsPoints.get (pt)) continue;
 bsPoints.set (pt);
+if (this.renderLow) {
+var s = this.screens[pt];
+this.g3d.drawPixel (s.x, s.y, s.z);
+} else {
 this.g3d.fillSphereI (4, this.screens[pt]);
-}
+}}
 }
 return;
 }for (var i = this.vertexCount; --i >= 0; ) if (!this.frontOnly || this.transformedVectors[this.normixes[i]].z >= 0) this.g3d.fillSphereI (4, this.screens[i]);
@@ -231,14 +237,14 @@ if (generateSet) this.exportSurface (this.colix);
 }, "~B,~B,~B");
 $_M(c$, "drawTriangle", 
 function (screenA, colixA, screenB, colixB, screenC, colixC, check, diam) {
-if (this.antialias || diam != 1) {
-if (this.antialias) diam <<= 1;
+if (!this.antialias && diam == 1) {
+this.g3d.drawTriangle3C (screenA, colixA, screenB, colixB, screenC, colixC, check);
+return;
+}if (this.antialias) diam <<= 1;
 if ((check & 1) == 1) this.g3d.fillCylinderXYZ (colixA, colixB, 1, diam, screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
 if ((check & 2) == 2) this.g3d.fillCylinderXYZ (colixB, colixC, 1, diam, screenB.x, screenB.y, screenB.z, screenC.x, screenC.y, screenC.z);
 if ((check & 4) == 4) this.g3d.fillCylinderXYZ (colixA, colixC, 1, diam, screenA.x, screenA.y, screenA.z, screenC.x, screenC.y, screenC.z);
-} else {
-this.g3d.drawTriangle3C (screenA, colixA, screenB, colixB, screenC, colixC, check);
-}}, "J.util.P3i,~N,J.util.P3i,~N,J.util.P3i,~N,~N,~N");
+}, "J.util.P3i,~N,J.util.P3i,~N,J.util.P3i,~N,~N,~N");
 $_M(c$, "checkNormals", 
 function (nA, nB, nC) {
 var check = 7;
