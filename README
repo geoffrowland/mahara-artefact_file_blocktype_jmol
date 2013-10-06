@@ -248,7 +248,25 @@ Then, to install the file types with the Mahara database, you will need to incre
 
 Remember to set appropriate server permissions for the new folders and contents.
 
-This plugin includes a recent Jmol/JSmol version (13.3.3_dev) located in the /jsmol folder. However, JSmol code is frequently updated so you may wish to replace/update the contents of the /jsmol folder with the latest version, unpacked from http://chemapps.stolaf.edu/jmol/zip/jsmol.zip 
+Using JSmol alongsisde MathJax
+If you are using MathJax to display formulae in Mahara pages, for example as described in https://mahara.org/interaction/forum/topic.php?id=3759#post16560
+then you may need to uncomment the following code from /artefact/file/blocktype/jmol/lib.php. 
+
+        //$html .= 'MathJax.Hub.Queue(function () {';
+        //$html .= 'loadJmol'.$id.'();';
+        //$html .= '});';
+        //$html .= 'loadJmol'.$id.' = function() {';
+        $html .= 'Jmol.setDocument(0);';
+        $html .= 'Jmol.getApplet("jmol'.$id.'", info'.$id.');';
+        $html .= 'jQuery("#jmoldiv'.$id.'").html(Jmol.getAppletHtml(jmol'.$id.'));';
+        $html .= 'jQuery("#controls'.$id.'").html('.$controls.')';
+        //$html .= '}';
+        $html .= '</script>';
+        return $html;
+
+This results in JSmol rendering after MathJax equations have displayed and prevents 'Math Processing Errors' due to conflicts between MathJax and JSmol.
+
+This plugin includes a recent Jmol/JSmol stable version (13.2.7) located in the /jsmol folder. However, JSmol code is frequently updated so you may wish to replace/update the contents of the /jsmol folder with the latest version, unpacked from http://chemapps.stolaf.edu/jmol/zip/jsmol.zip 
 
 Finally, visit your Site Administration > Plugin Administration page to enable the plugin. Remember to select the chemical file types you wish to use from the configuration menu. 
 
