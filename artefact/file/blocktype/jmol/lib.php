@@ -342,6 +342,7 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         //$html .= '});';
         //$html .= 'loadJmol'.$id.' = function() {';
         $html .= 'Jmol.setDocument(0);';
+        $html .= 'Jmol._alertNoBinary = false;';
         $html .= 'Jmol.getApplet("jmol'.$id.'", info'.$id.');';
         $html .= 'jQuery("#jmoldiv'.$id.'").html(Jmol.getAppletHtml(jmol'.$id.'));';
         $html .= 'jQuery("#controls'.$id.'").html('.$controls.')';
