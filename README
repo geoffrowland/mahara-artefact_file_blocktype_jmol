@@ -49,19 +49,13 @@ Note that development has focused on the functionality of this, and there may be
 Installation
 ------------
 
-The latest version of the plugin, for Mahara 1.2, 1.3, 1.4, 1.5, 1.6 and 1.7 can be downloaded from Github
+The latest version of the plugin, for Mahara 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 and 1.8 can be downloaded from Github
 
 https://github.com/geoffrowland/mahara-artefact_file_blocktype_jmol
 
 On unpacking, the /jmol folder (and its contents) is copied into the /artefact/file/blocktype folder of your Mahara installation.
 
 Some other edits of Mahara files are required (or you can copy across the appropriate files from the download bundle).
-
-If you wish to display binary format (.pse or .pdb.gz) files then you need to edit /lib/web.php to comment out the line that loads jQuery
-and load JSmoljQuery instead. The completed edit should be as follows:
-
-// $javascript_array[] = $jsroot . 'jquery/jquery.js';
-$javascript_array[] = $wwwroot . 'artefact/file/blocktype/jmol/jsmol/js/JSmoljQuery.js';
 
 To 
 
@@ -84,7 +78,7 @@ $string['xyz'] = 'XYZ Coordinate Animation Format';
 
 Then you need to edit /artefact/file/lib.php to set the appropriate file mime-types. The precise details differ depending on the Mahara version.
 
-For Mahara 1.7 and 1.6: Immediately after:
+For Mahara 1.8, 1.7 and 1.6: Immediately after:
 
        if (empty($data->filetype) || $data->filetype == 'application/octet-stream') {
            $data->filetype = $data->guess;
