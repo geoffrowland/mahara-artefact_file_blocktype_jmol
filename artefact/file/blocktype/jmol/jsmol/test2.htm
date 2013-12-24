@@ -3,6 +3,7 @@
 <title>HTML5-only and WebGL Jmol Demo</title>
 <head>
 <meta charset="utf-8">
+<!-- breaking out the library for debugging -->
 <script type="text/javascript" src="jquery/jquery.js"></script>
 <script type="text/javascript" src="js/JSmoljQueryExt.js"></script>
 <script type="text/javascript" src="js/JSmolCore.js"></script>
@@ -11,6 +12,8 @@
 <script type="text/javascript" src="js/JSmolControls.js"></script>
 <script type="text/javascript" src="js/j2sjmol.js"></script>
 <script type="text/javascript" src="js/JSmol.js"></script>
+<script type="text/javascript" src="js/JSmolConsole.js"></script>
+<script type="text/javascript" src="js/JSmolMenu.js"></script>
 <!-- // following two only necessary for WebGL version: 
 -->
 <script type="text/javascript" src="js/JSmolThree.js"></script>
@@ -18,41 +21,14 @@
 
 <script type="text/javascript">
 
+Jmol.getProfile()
+
 var jmolApplet0; // set up in HTML table, below
 var Info;
 
 ;(function() {
 
-// logic is set by indicating order of USE -- default is HTML5 for this test page, though
-var use = "HTML5"//"JAVA HTML5 IMAGE" // WEBGL only by request by link below.
-var s = document.location.search;
-
-
-// Developers: The debugCode flag is checked in j2s/java/core.z.js, 
-// and, if TRUE, skips loading the core methods, forcing those
-// to be read from their individual directories. Set this
-// true if you want to do some code debugging by inserting
-// System.out.println, document.title, or alert commands
-// anywhere in the Java or Jmol code.
-
-Jmol.debugCode = (s.indexOf("debugcode") >= 0);
-
-//if (s.indexOf("?") < 0) s = "USE=HTML5"
-
-if (s.indexOf("USE=") >= 0)
-  use = s.split("USE=")[1].split("&")[0]
-else if (s.indexOf("JAVA") >= 0)
-  use = "JAVA"
-else if (s.indexOf("IMAGE") >= 0)
-  use = "IMAGE"
-else if (s.indexOf("NOWEBGL") >= 0)
-  use = "JAVA IMAGE"
-else if (s.indexOf("WEBGL") >= 0)
-  use = "WEBGL HTML5"
-if (s.indexOf("NOWEBGL") >= 0)
-  use = use.replace(/WEBGL/,"")
-var useSignedApplet = (s.indexOf("SIGNED") >= 0);
-if(useSignedApplet && use == "HTML5") use = "JAVA";
+// use ?_USE=JAVA or _USE=SIGNED or _USE=HTML5
 
 jmol_isReady = function(applet) {
 	document.title = (applet._id + " is ready")
@@ -60,20 +36,19 @@ jmol_isReady = function(applet) {
  
 }		
 
-
 Info = {
 	width: 300,
 	height: 300,
 	debug: false,
-	color: "0xF0F0F0",
+	color: "#F0F0F0",
 	addSelectionOptions: true,
 	serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",
-	use: use,
+	use: "HTML5",
   //language: "fr", // NOTE: LOCALIZATION REQUIRES <meta charset="utf-8"> (see JSmolCore Jmol.featureDetection.supportsLocalization)
 	jarPath: "java",
 	j2sPath: "j2s",
-	jarFile: (useSignedApplet ? "JmolAppletSigned.jar" : "JmolApplet.jar"),
-	isSigned: useSignedApplet,
+	jarFile: "JmolApplet.jar",
+	isSigned: false,
 	disableJ2SLoadMonitor: false,
 	disableInitialConsole: false,
 	readyFunction: jmol_isReady,
@@ -191,16 +166,13 @@ Enter "!" and a command into the search box and press ENTER to execute a <a targ
 <table cellpadding=5><tr><td valign=top>
 <b>rendering options:</b> 
 	 <br /> 
-  <a href=test2.htm?USE=JAVA>unsigned Jmol applet</a> 
+  <a href=test2.htm?_USE=JAVA>unsigned Jmol applet</a> 
  <br /> 
-<a href=test2.htm?SIGNED>signed Jmol applet</a>
+<a href=test2.htm?_USE=SIGNED>signed Jmol applet</a>
  <br /> 
-<a href=test2.htm?USE=HTML5>JSmol (HTML5 only)</a> 
+<a href=test2.htm?_USE=HTML5>JSmol (HTML5 only)</a> 
  <br /> 
- <a href=test2.htm?WEBGL>JSmol (WebGL)</a> 
- <br /> 
- <a href=test2.htm?IMAGE>image only</a>
- <br />
+ <a href=test2.htm?_USE=WEBGL>JSmol (WebGL)</a> 
  <br />
 	<b>keyword searches</b>
  <br />
@@ -212,6 +184,8 @@ Enter "!" and a command into the search box and press ENTER to execute a <a targ
 </td><td valign=top>
 	<b>this-domain calls</b>
  <br />
+ <a href="javascript:Jmol.script(jmolApplet0,'load data/1cbs.cif; set echo top left;echo loading map file...;refresh;isosurface downsample 2 cutoff 0.5 boundbox &quot;data/1cbs_2fofc.map&quot mesh nofill;isosurface display within 2.0 {*};echo')">2.2MB EDM test</a>
+<br />  
  <a href="javascript:Jmol.script(jmolApplet0,'load ?')">local file reading</a>
 <br />
  <a href="javascript:Jmol.script(jmolApplet0,'minimize')">minimize</a> 
@@ -274,7 +248,7 @@ Enter "!" and a command into the search box and press ENTER to execute a <a targ
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage scale 1.0')">x 1.0</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage scale 2.0')">x 2.0</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage off')">off</a>         
- <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage image &quot;data/bob.png&quot;set echo myimage depth 50')">on</a>
+ <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage image &quot;data/bob.png&quot;;set echo myimage depth 50')">on</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 100')">front</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 50')">mid</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 0')">back</a>

@@ -1,3 +1,97 @@
+(function(Clazz
+,$_A
+,$_Ab
+,$_AB
+,$_AC
+,$_AD
+,$_AF
+,$_AI
+,$_AL
+,$_AS
+,$_B
+,$_C
+,$_D
+,$_E
+,$_F
+,$_G
+,$_H
+,$_I
+,$_J
+,$_K
+,$_k
+,$_L
+,$_M
+,$_N
+,$_O
+,$_P
+,$_Q
+,$_R
+,$_S
+,$_s
+,$_T
+,$_U
+,$_V
+,$_W
+,$_X
+,$_Y
+,$_Z
+,Clazz_doubleToInt
+,Clazz_declarePackage
+,Clazz_instanceOf
+,Clazz_load
+,Clazz_instantialize
+,Clazz_decorateAsClass
+,Clazz_floatToInt
+,Clazz_makeConstructor
+,Clazz_defineEnumConstant
+,Clazz_exceptionOf
+,Clazz_newIntArray
+,Clazz_defineStatics
+,Clazz_newFloatArray
+,Clazz_declareType
+,Clazz_prepareFields
+,Clazz_superConstructor
+,Clazz_newByteArray
+,Clazz_declareInterface
+,Clazz_p0p
+,Clazz_pu$h
+,Clazz_newShortArray
+,Clazz_innerTypeInstance
+,Clazz_isClassDefined
+,Clazz_prepareCallback
+,Clazz_newArray
+,Clazz_castNullAs
+,Clazz_floatToShort
+,Clazz_superCall
+,Clazz_decorateAsType
+,Clazz_newBooleanArray
+,Clazz_newCharArray
+,Clazz_implementOf
+,Clazz_newDoubleArray
+,Clazz_overrideConstructor
+,Clazz_supportsNativeObject
+,Clazz_extendedObjectMethods
+,Clazz_callingStackTraces
+,Clazz_clone
+,Clazz_doubleToShort
+,Clazz_innerFunctions
+,Clazz_getInheritedLevel
+,Clazz_getParamsType
+,Clazz_isAF
+,Clazz_isAI
+,Clazz_isAS
+,Clazz_isASS
+,Clazz_isAP
+,Clazz_isAFloat
+,Clazz_isAII
+,Clazz_isAFF
+,Clazz_isAFFF
+,Clazz_tryToSearchAndExecute
+,Clazz_getStackTrace
+,Clazz_inheritArgs
+){
+var $t$;
+//var c$;
 // coreconsole.z.js
 // BH 1/5/2013 12:45:19 PM
 
@@ -25,7 +119,7 @@ Jmol.Console.JSConsole = function(appletConsole) {
 
 	// create and insert HTML code here
 
-	var s = '<div id="$ID" class="jmolConsole" style="display:block;background-color:yellow;width:600px;height:362px;position:absolute;z-order:9999"><div id=$ID_title></div><div id=$ID_label1></div><div id=$ID_outputdiv style="position:relative;left:2px"></div><div id=$ID_inputdiv style="position:relative;left:2px"></div><div id=$ID_buttondiv></div></div>'
+	var s = '<div id="$ID" class="jmolConsole" style="display:block;background-color:yellow;width:600px;height:362px;position:absolute;z-index:9999"><div id=$ID_title></div><div id=$ID_label1></div><div id=$ID_outputdiv style="position:relative;left:2px"></div><div id=$ID_inputdiv style="position:relative;left:2px"></div><div id=$ID_buttondiv></div></div>'
 
 	var setBtn = function(console, btn) {
 		btn.console = console;
@@ -78,17 +172,18 @@ Jmol._setDraggable(Jmol.Console.JSConsole);
 Jmol.Console.Input = function(console) {
 
 	this.console = console;
+  this.id = console.id + "_input";
 	
 	// something like this....
 
 	this.getText = function() {
-		return Jmol.$val(this.console.id + "_input");
+		return Jmol.$val(this.id);
 	}
 
 	this.setText = function(text) {
 		if (text == null)
 			text = "";
-		Jmol.$val(this.console.id + "_input", text);
+		Jmol.$val(this.id, text);
 	}
 
 	this.keyPressed = function(ev) {
@@ -103,13 +198,13 @@ Jmol.Console.Input = function(console) {
       if (ev.keyCode == 9 || kcode == 9) {
       // tab         
         var me = this;
-        setTimeout(function(){me.setText(me.getText() + "\t"); Jmol.$focus(me.console.id + "_input")},10);	
+        setTimeout(function(){me.setText(me.getText() + "\t"); Jmol.$focus(me.id)},10);	
       }
         
     if ((mode & 1) == 1 || kcode == 0)
 			ev.preventDefault();
-		if ((mode & 2) == 2) {
-		}
+		//if ((mode & 2) == 2) {
+		//}
     
     
 	}
@@ -127,13 +222,13 @@ Jmol.Console.Input = function(console) {
 		
     if ((mode & 1) == 1)
 			ev.preventDefault();
-		if ((mode & 2) == 2) {
-		}
+		//if ((mode & 2) == 2) {
+		//}
 	}
 
 
   this.getCaretPosition = function() {
-    var el = Jmol.$get(this, 0);
+    var el = Jmol.$get(this.id)[0];
     if('selectionStart' in el)
       return el.selectionStart;
 		if(!('selection' in document))
@@ -148,20 +243,20 @@ Jmol.Console.Input = function(console) {
 }
 
 Jmol.Console.Output = function(console) {
-	this.console = console;
-		
+  this.id = console.id + "_output";
 	this.getText = function() {
-		return Jmol.$val(this.console.id + "_output");
+		return Jmol.$val(this.id);
 	}
 
 	this.setText = function(text) {
 		if (text == null)
 			text = "";
-		Jmol.$val(this.console.id + "_output", text);
+		Jmol.$val(this.id, text);
 	}
 	
   this.append = function(message, att) {
-		this.setText(this.getText() + message); 		 
+		this.setText(this.getText() + message);
+    Jmol.$scrollTo(this.id, -1); 		 
   }
 }
 
@@ -179,13 +274,11 @@ Jmol.Console.Button.prototype.html = function() {
 	return s;
 }
 
-Clazz.declarePackage ("J.api");
-Clazz.declareInterface (J.api, "JmolAppConsoleInterface");
-Clazz.declarePackage ("J.console");
-Clazz.declareInterface (J.console, "GenericTextArea");
-Clazz.declarePackage ("J.console");
-Clazz.load (["J.api.JmolAppConsoleInterface", "$.JmolCallbackListener", "java.util.Hashtable"], "J.console.GenericConsole", ["java.lang.Boolean", "J.constant.EnumCallback", "J.i18n.GT", "J.script.T", "J.util.TextFormat", "J.viewer.Viewer"], function () {
-c$ = Clazz.decorateAsClass (function () {
+Clazz_declarePackage ("J.console");
+Clazz_declareInterface (J.console, "GenericTextArea");
+Clazz_declarePackage ("J.console");
+Clazz_load (["J.api.JmolAppConsoleInterface", "$.JmolCallbackListener", "java.util.Hashtable"], "J.console.GenericConsole", ["java.lang.Boolean", "JU.PT", "J.constant.EnumCallback", "J.i18n.GT", "J.script.T", "J.viewer.Viewer"], function () {
+c$ = Clazz_decorateAsClass (function () {
 this.input = null;
 this.output = null;
 this.viewer = null;
@@ -202,9 +295,9 @@ this.defaultMessage = null;
 this.label1 = null;
 this.nTab = 0;
 this.incompleteCmd = null;
-Clazz.instantialize (this, arguments);
+Clazz_instantialize (this, arguments);
 }, J.console, "GenericConsole", null, [J.api.JmolAppConsoleInterface, J.api.JmolCallbackListener]);
-Clazz.prepareFields (c$, function () {
+Clazz_prepareFields (c$, function () {
 this.menuMap =  new java.util.Hashtable ();
 });
 $_M(c$, "setViewer", 
@@ -293,8 +386,8 @@ splitCmd = J.console.GenericConsole.splitCommandLine (strCommand);
 var cmd = null;
 if (!asCommand && (notThis.charAt (0) == '"' || notThis.charAt (0) == '\'')) {
 var q = notThis.charAt (0);
-notThis = J.util.TextFormat.trim (notThis, "\"\'");
-var stub = J.util.TextFormat.trim (splitCmd[2], "\"\'");
+notThis = JU.PT.trim (notThis, "\"\'");
+var stub = JU.PT.trim (splitCmd[2], "\"\'");
 cmd = this.nextFileName (stub, this.nTab);
 if (cmd != null) cmd = splitCmd[0] + splitCmd[1] + q + cmd + q;
 } else {
@@ -325,7 +418,7 @@ return;
 this.output.setText ("");
 return;
 }if (source === this.loadButton) {
-this.viewer.loadInline (this.input.getText (), false);
+this.viewer.loadInlineAppend (this.input.getText (), false);
 return;
 }if (this.isMenuItem (source)) {
 this.execute ((source).getName ());
@@ -380,7 +473,7 @@ var mnemonic = J.console.GenericConsole.getMnemonic (label);
 if (mnemonic != ' ') (button).setMnemonic (mnemonic);
 menuMap.put (key, button);
 }, "~O,~S,~S,java.util.Map");
-Clazz.overrideMethod (c$, "notifyEnabled", 
+$_V(c$, "notifyEnabled", 
 function (type) {
 switch (type) {
 case J.constant.EnumCallback.ECHO:
@@ -405,11 +498,11 @@ break;
 }
 return false;
 }, "J.constant.EnumCallback");
-Clazz.overrideMethod (c$, "getText", 
+$_V(c$, "getText", 
 function () {
 return this.output.getText ();
 });
-Clazz.overrideMethod (c$, "sendConsoleEcho", 
+$_V(c$, "sendConsoleEcho", 
 function (strEcho) {
 if (strEcho == null) {
 this.updateLabels ();
@@ -418,23 +511,23 @@ strEcho = this.defaultMessage;
 }this.outputMsg (strEcho);
 }, "~S");
 $_M(c$, "outputMsg", 
-($fz = function (message) {
+function (message) {
 if (message == null || message.length == 0) {
 this.output.setText ("");
 return;
 }if (message.charAt (message.length - 1) != '\n') message += "\n";
 this.output.append (message);
-}, $fz.isPrivate = true, $fz), "~S");
+}, "~S");
 $_M(c$, "clearContent", 
 function (text) {
 this.output.setText (text);
 }, "~S");
-Clazz.overrideMethod (c$, "sendConsoleMessage", 
+$_V(c$, "sendConsoleMessage", 
 function (strInfo) {
 if (strInfo != null && this.output.getText ().startsWith (this.defaultMessage)) this.outputMsg (null);
 this.outputMsg (strInfo);
 }, "~S");
-Clazz.overrideMethod (c$, "notifyCallback", 
+$_V(c$, "notifyCallback", 
 function (type, data) {
 var strInfo = (data == null || data[1] == null ? null : data[1].toString ());
 switch (type) {
@@ -454,10 +547,10 @@ this.sendConsoleMessage (strInfo);
 break;
 }
 }, "J.constant.EnumCallback,~A");
-Clazz.overrideMethod (c$, "setCallbackFunction", 
+$_V(c$, "setCallbackFunction", 
 function (callbackType, callbackFunction) {
 }, "~S,~S");
-Clazz.overrideMethod (c$, "zap", 
+$_V(c$, "zap", 
 function () {
 });
 $_M(c$, "recallCommand", 
@@ -500,7 +593,7 @@ break;
 return mode | 2;
 }, "~N,~N,~B");
 c$.splitCommandLine = $_M(c$, "splitCommandLine", 
-($fz = function (cmd) {
+function (cmd) {
 var sout =  new Array (4);
 var isEscaped1 = false;
 var isEscaped2 = false;
@@ -554,60 +647,152 @@ sout[1] = (ptToken == ptCmd ? cmd.substring (ptCmd) : cmd.substring (ptCmd, (ptT
 sout[2] = (ptToken == ptCmd ? null : cmd.substring (ptToken));
 sout[3] = (nBrace > 0 ? "{" : null);
 return sout;
-}, $fz.isPrivate = true, $fz), "~S");
+}, "~S");
 });
-Clazz.declarePackage ("J.consolejs");
-Clazz.load (["J.console.GenericConsole"], "J.consolejs.AppletConsole", null, function () {
-c$ = Clazz.decorateAsClass (function () {
+Clazz_declarePackage ("J.consolejs");
+Clazz_load (["J.console.GenericConsole"], "J.consolejs.AppletConsole", null, function () {
+c$ = Clazz_decorateAsClass (function () {
 this.jsConsole = null;
-Clazz.instantialize (this, arguments);
+Clazz_instantialize (this, arguments);
 }, J.consolejs, "AppletConsole", J.console.GenericConsole);
-Clazz.makeConstructor (c$, 
+Clazz_makeConstructor (c$, 
 function () {
-Clazz.superConstructor (this, J.consolejs.AppletConsole, []);
+Clazz_superConstructor (this, J.consolejs.AppletConsole, []);
 });
-Clazz.overrideMethod (c$, "start", 
+$_V(c$, "start", 
 function (viewer) {
 this.setViewer (viewer);
 this.setLabels ();
 this.displayConsole ();
 }, "J.api.JmolViewer");
-Clazz.overrideMethod (c$, "layoutWindow", 
+$_V(c$, "layoutWindow", 
 function (enabledButtons) {
 {
 this.jsConsole = new Jmol.Console.JSConsole(this);
 }this.setTitle ();
 }, "~S");
-Clazz.overrideMethod (c$, "setTitle", 
+$_V(c$, "setTitle", 
 function () {
 {
 if (this.jsConsole)
 this.jsConsole.setTitle(this.getLabel("title"));
 }});
-Clazz.overrideMethod (c$, "setVisible", 
+$_V(c$, "setVisible", 
 function (visible) {
 {
 this.jsConsole.setVisible(visible);
 }}, "~B");
-Clazz.overrideMethod (c$, "setButton", 
+$_V(c$, "setButton", 
 function (text) {
 {
 return new Jmol.Console.Button(text);
 }}, "~S");
-Clazz.overrideMethod (c$, "dispose", 
+$_V(c$, "dispose", 
 function () {
 this.setVisible (false);
 });
-Clazz.overrideMethod (c$, "isMenuItem", 
+$_V(c$, "isMenuItem", 
 function (source) {
 return false;
 }, "~O");
-Clazz.overrideMethod (c$, "getScriptEditor", 
+$_V(c$, "getScriptEditor", 
 function () {
 return null;
 });
-Clazz.overrideMethod (c$, "nextFileName", 
+$_V(c$, "nextFileName", 
 function (stub, nTab) {
 return null;
 }, "~S,~N");
 });
+})(Clazz
+,Clazz.newArray
+,Clazz.newBooleanArray
+,Clazz.newByteArray
+,Clazz.newCharArray
+,Clazz.newDoubleArray
+,Clazz.newFloatArray
+,Clazz.newIntArray
+,Clazz.newLongArray
+,Clazz.newShortArray
+,Clazz.prepareCallback
+,Clazz.decorateAsClass
+,Clazz.isClassDefined
+,Clazz.defineEnumConstant
+,Clazz.cloneFinals
+,Clazz.inheritArgs
+,Clazz.pu$h
+,Clazz.declareInterface
+,Clazz.declarePackage
+,Clazz.makeConstructor
+,Clazz.overrideConstructor
+,Clazz.load
+,Clazz.defineMethod
+,Clazz.innerTypeInstance
+,Clazz.instanceOf
+,Clazz.p0p
+,Clazz.makeFunction
+,Clazz.superConstructor
+,Clazz.defineStatics
+,Clazz.registerSerializableFields
+,Clazz.declareType
+,Clazz.superCall
+,Clazz.overrideMethod
+,Clazz.declareAnonymous
+,Clazz.checkPrivateMethod
+,Clazz.prepareFields
+,Clazz.instantialize
+,Clazz.doubleToInt
+,Clazz.declarePackage
+,Clazz.instanceOf
+,Clazz.load
+,Clazz.instantialize
+,Clazz.decorateAsClass
+,Clazz.floatToInt
+,Clazz.makeConstructor
+,Clazz.defineEnumConstant
+,Clazz.exceptionOf
+,Clazz.newIntArray
+,Clazz.defineStatics
+,Clazz.newFloatArray
+,Clazz.declareType
+,Clazz.prepareFields
+,Clazz.superConstructor
+,Clazz.newByteArray
+,Clazz.declareInterface
+,Clazz.p0p
+,Clazz.pu$h
+,Clazz.newShortArray
+,Clazz.innerTypeInstance
+,Clazz.isClassDefined
+,Clazz.prepareCallback
+,Clazz.newArray
+,Clazz.castNullAs
+,Clazz.floatToShort
+,Clazz.superCall
+,Clazz.decorateAsType
+,Clazz.newBooleanArray
+,Clazz.newCharArray
+,Clazz.implementOf
+,Clazz.newDoubleArray
+,Clazz.overrideConstructor
+,Clazz.supportsNativeObject
+,Clazz.extendedObjectMethods
+,Clazz.callingStackTraces
+,Clazz.clone
+,Clazz.doubleToShort
+,Clazz.innerFunctions
+,Clazz.getInheritedLevel
+,Clazz.getParamsType
+,Clazz.isAF
+,Clazz.isAI
+,Clazz.isAS
+,Clazz.isASS
+,Clazz.isAP
+,Clazz.isAFloat
+,Clazz.isAII
+,Clazz.isAFF
+,Clazz.isAFFF
+,Clazz.tryToSearchAndExecute
+,Clazz.getStackTrace
+,Clazz.inheritArgs
+);

@@ -8,7 +8,6 @@
 <script type="text/javascript">
 
 // 1/21/2013 10:54:15 PM -- adds image handling
-
 var jmolApplet0; // set up in HTML table, below
 
 // logic is set by indicating order of USE -- default is HTML5 for this test page, though
@@ -26,7 +25,7 @@ var s = document.location.search;
 Jmol.debugCode = (s.indexOf("debugcode") >= 0);
 
 jmol_isReady = function(applet) {
-	document.title = (applet._id + " is ready")
+	document.title = (applet._id + " - Jmol " + ___JmolVersion)
 	Jmol._getElement(applet, "appletdiv").style.border="1px solid blue"
 }		
 
@@ -51,6 +50,11 @@ var Info = {
 	//defaultModel: "$dopamine",
 	//console: "none", // default will be jmolApplet0_infodiv
 }
+
+$(document).ready(function() {
+  $("#appdiv").html(Jmol.getAppletHtml("jmolApplet0", Info))
+})
+var lastPrompt=0;
 </script>
 </head>
 <body>
@@ -64,22 +68,9 @@ Credits:
 WebGL interface written by <b>Takanori Nakane</b>. 
 Java2Script written by <b>Zhou Renjian, et al.</b>
 Jzlib written by <b>Atsuhiko Yamanaka</b>.
-Jmol code conversion to JavaScript by <b>Bob Hanson</b>. 
-
 </td></tr>
 <tr><td valign="top">
-
-<script>
-
-// note that the variable name MUST match the first parameter in quotes
-
-jmolApplet0 = Jmol.getApplet("jmolApplet0", Info)
-
-// note that now scripts can be sent immediately after the _Applet object is created
-
-//Jmol.script(jmolApplet0,"background gray;delay 0.5;background black")
-var lastPrompt=0;
-</script>
+<div id="appdiv"></div>
 <br>
 <a href="javascript:Jmol.script(jmolApplet0,'console')">console</a>
 <a href="javascript:Jmol.script(jmolApplet0,'write PNGJ jmol.png')">image</a>
@@ -148,12 +139,14 @@ Enter "!" and a command into the search box and press ENTER or open the <a href=
 </td><td valign=top>
 	<b>this-domain calls</b>
 <br />
+ <a href="javascript:Jmol.script(jmolApplet0,'load data/1cbs.cif; set echo top left;echo loading map file...;refresh;isosurface downsample 2 cutoff 0.5 boundbox &quot;data/1cbs_2fofc.map&quot mesh nofill;isosurface display within 2.0 {*};echo')">2.2MB EDM test</a>
+<br />  
  local file <a href="javascript:Jmol.script(jmolApplet0,'load ?')">reading</a> <a href="javascript:Jmol.script(jmolApplet0,'write FILE ?')">writing</a>
   <a href="javascript:Jmol.script(jmolApplet0,'write PNGJ test.png')">saving(PNGJ)</a>
 <br />
  <a href="javascript:Jmol.script(jmolApplet0,'!quit;script data/rabe.spt;')">make a nanotube</a>
 <br />
- <a href="javascript:Jmol.script(jmolApplet0,'minimize')">minimize</a> 
+ <a href="javascript:Jmol.script(jmolApplet0,'load data/c60af.mol;rotate x -60;delay 1;minimize')">minimize</a> 
  <a href="javascript:Jmol.script(jmolApplet0,'set modelkitmode;set picking dragMinimize')">drag-minimize</a>
  <a href="javascript:Jmol.script(jmolApplet0,'!quit;set modelkitmode false;set picking ident;')">!quit</a>
 <br />
@@ -187,8 +180,6 @@ Enter "!" and a command into the search box and press ENTER or open the <a href=
  <br />
  <a href="javascript:Jmol.script(jmolApplet0,'load data/square_planar.spartan')">load data/square_planar.spartan</a>
  <br />
- <a href="javascript:Jmol.script(jmolApplet0,'load data/3hz7.pdb.gz')">load data/3hz7.pdb.gz</a>
- <br />
  <a href="javascript:Jmol.script(jmolApplet0,'load data/water.xyz.gz')">load data/water.xyz.gz</a>
  <br />
  <a href="javascript:Jmol.script(jmolApplet0,'load data/no2_nbo.log.gz')">load data/no2_nbo.log.gz</a>
@@ -217,7 +208,7 @@ Enter "!" and a command into the search box and press ENTER or open the <a href=
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage scale 1.0')">x 1.0</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage scale 2.0')">x 2.0</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage off')">off</a>         
- <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage image &quot;data/bob.png&quot;set echo myimage depth 50')">on</a>
+ <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage image &quot;data/bob.png&quot;;set echo myimage depth 50')">on</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 100')">front</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 50')">mid</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 0')">back</a>

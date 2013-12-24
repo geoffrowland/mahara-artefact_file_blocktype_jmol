@@ -8,7 +8,6 @@
 
 $(document).ready(function() {
 
-
 Info = {
 	width: 400,
 	height: 400,
@@ -17,20 +16,13 @@ Info = {
   disableJ2SLoadMonitor: true,
   disableInitialConsole: true,
 	addSelectionOptions: true,
-	serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/jsmol.php",
+	serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",
 	use: "HTML5",
 	readyFunction: null,
 	script: "load $caffeine"
 }
 
-Jmol.setDocument(0) // required for after-page-loading to avoid document.write()
-
-Jmol.getApplet("jmolApplet0",Info)  
-
-// app would be the first parameter of a Jmol.script command 
-
-$("#mydiv").html(Jmol.getAppletHtml(jmolApplet0))
-
+$("#mydiv").html(Jmol.getAppletHtml("jmolApplet0",Info))
 
 });
 

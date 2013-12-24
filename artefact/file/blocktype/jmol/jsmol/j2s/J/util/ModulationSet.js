@@ -1,20 +1,24 @@
 Clazz.declarePackage ("J.util");
-Clazz.load (["J.util.Vibration"], "J.util.ModulationSet", ["java.lang.Float", "java.util.Hashtable", "J.util.Escape", "$.Logger", "$.Matrix3f", "$.V3"], function () {
+Clazz.load (["J.api.JmolModulationSet", "J.util.Vibration"], "J.util.ModulationSet", ["java.lang.Float", "java.util.Hashtable", "JU.M3", "$.P3", "$.V3", "J.util.Escape", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vOcc = NaN;
 this.htUij = null;
-this.enabled = false;
-this.id = null;
-this.prevSetting = null;
 this.vOcc0 = 0;
+this.id = null;
+this.x456 = null;
+this.prevSetting = null;
 this.mods = null;
 this.gammaE = null;
 this.t = 2147483647;
 this.qlen = null;
 this.modDim = 0;
-this.x456 = null;
+this.enabled = false;
 Clazz.instantialize (this, arguments);
-}, J.util, "ModulationSet", J.util.Vibration);
+}, J.util, "ModulationSet", J.util.Vibration, J.api.JmolModulationSet);
+$_V(c$, "isEnabled", 
+function () {
+return this.enabled;
+});
 Clazz.makeConstructor (c$, 
 function (id, r, modDim, mods, gammaE, gammaIS, q123w, qlen) {
 Clazz.superConstructor (this, J.util.ModulationSet, []);
@@ -22,29 +26,34 @@ this.id = id;
 this.modDim = modDim;
 this.mods = mods;
 this.gammaE = gammaE;
-var gammaIinv =  new J.util.Matrix3f ();
+var gammaIinv =  new JU.M3 ();
 gammaIS.getRotationScale (gammaIinv);
-var sI =  new J.util.V3 ();
+var sI =  new JU.V3 ();
 gammaIS.get (sI);
 gammaIinv.invert ();
-this.x456 = J.util.V3.newV (r);
-var m =  new J.util.Matrix3f ();
+this.x456 = JU.V3.newV (r);
 q123w.transform (this.x456);
 this.x456.sub (sI);
 gammaIinv.transform (this.x456);
 if (J.util.Logger.debuggingHigh) J.util.Logger.debug ("MODSET create r=" + J.util.Escape.eP (r) + " si=" + J.util.Escape.eP (sI) + " ginv=" + gammaIinv.toString ().$replace ('\n', ' ') + " x4=" + this.x456.x);
 this.qlen = qlen;
-}, "~S,J.util.P3,~N,J.util.JmolList,J.util.Matrix3f,J.util.Matrix4f,J.util.Matrix4f,~A");
+}, "~S,JU.P3,~N,JU.List,JU.M3,JU.M4,JU.M4,~A");
 $_M(c$, "calculate", 
-function () {
+function (fracT) {
 this.x = this.y = this.z = 0;
 this.htUij = null;
 this.vOcc = NaN;
-var offset = (this.t == 2147483647 ? 0 : this.qlen[0] * this.t);
+var offset = (this.t == 2147483647 ? 0 : this.qlen[0] * this.t) + fracT;
 for (var i = this.mods.size (); --i >= 0; ) this.mods.get (i).apply (this, offset);
 
 this.gammaE.transform (this);
-});
+}, "~N");
+$_V(c$, "getModulation", 
+function (t, pt) {
+this.calculate (t);
+pt.setT (this);
+this.calculate (0);
+}, "~N,JU.P3");
 $_M(c$, "addUTens", 
 function (utens, v) {
 if (this.htUij == null) this.htUij =  new java.util.Hashtable ();
@@ -53,7 +62,7 @@ if (J.util.Logger.debuggingHigh) J.util.Logger.debug ("MODSET " + this.id + " ut
 if (f != null) v += f.floatValue ();
 this.htUij.put (utens, Float.$valueOf (v));
 }, "~S,~N");
-$_M(c$, "setModT", 
+$_V(c$, "setModT", 
 function (isOn, t) {
 if (t == 2147483647) {
 if (this.enabled == isOn) return 0;
@@ -61,15 +70,27 @@ this.enabled = isOn;
 this.scale (-1);
 return (this.enabled ? 2 : 1);
 }if (this.modDim > 1 || t == this.t) return 4;
-if (this.prevSetting == null) this.prevSetting =  new J.util.V3 ();
+if (this.prevSetting == null) this.prevSetting =  new JU.V3 ();
 this.prevSetting.setT (this);
 this.t = t;
-this.calculate ();
+this.calculate (0);
 this.enabled = false;
 return 3;
 }, "~B,~N");
-$_M(c$, "getState", 
+$_V(c$, "getState", 
 function () {
 return "modulation " + (!this.enabled ? "OFF" : this.t == 2147483647 ? "ON" : "" + this.t);
 });
+$_V(c$, "getPrevSetting", 
+function () {
+return this.prevSetting;
+});
+$_V(c$, "getModulationData", 
+function (type, t) {
+if (type.equals ("D")) {
+var pt =  new JU.P3 ();
+this.getModulation (t, pt);
+return pt;
+}return null;
+}, "~S,~N");
 });

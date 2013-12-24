@@ -15,8 +15,14 @@
 -->
 <script type="text/javascript" src="js/JSmolThree.js"></script>
 <script type="text/javascript" src="js/JSmolGLmol.js"></script>
+<script type="text/javascript" src="js/JSmolMenu.js"></script>
+<script type="text/javascript" src="js/JSmolConsole.js"></script>
+<script type="text/javascript" src="js/JSmolTest.js"></script>
 
 <script type="text/javascript">
+
+Jmol.debugCode = true;//(s.indexOf("debugcode") >= 0);
+
 
 var jmolApplet0; // set up in HTML table, below
 var Info;
@@ -34,8 +40,6 @@ var s = document.location.search;
 // true if you want to do some code debugging by inserting
 // System.out.println, document.title, or alert commands
 // anywhere in the Java or Jmol code.
-
-Jmol.debugCode = true;//(s.indexOf("debugcode") >= 0);
 
 //if (s.indexOf("?") < 0) s = "USE=HTML5"
 
@@ -190,11 +194,11 @@ Enter "!" and a command into the search box and press ENTER to execute a <a targ
 <table cellpadding=5><tr><td valign=top>
 <b>rendering options:</b> 
 	 <br /> 
-  <a href=test.htm?USE=JAVA>unsigned Jmol applet</a> 
+  <a href=test.htm?_USE=JAVA>unsigned Jmol applet</a> 
  <br /> 
 <a href=test.htm?SIGNED>signed Jmol applet</a>
  <br /> 
-<a href=test.htm?USE=HTML5>JSmol (HTML5 only)</a> 
+<a href=test.htm?_USE=HTML5>JSmol (HTML5 only)</a> 
  <br /> 
  <a href=test.htm?WEBGL>JSmol (WebGL)</a> 
  <br /> 
@@ -273,7 +277,7 @@ Enter "!" and a command into the search box and press ENTER to execute a <a targ
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage scale 1.0')">x 1.0</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage scale 2.0')">x 2.0</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage off')">off</a>         
- <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage image &quot;data/bob.png&quot;set echo myimage depth 50')">on</a>
+ <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage image &quot;data/bob.png&quot;;set echo myimage depth 50')">on</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 100')">front</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 50')">mid</a>
  <a href="javascript:Jmol.script(jmolApplet0,'set echo myimage depth 0')">back</a>
