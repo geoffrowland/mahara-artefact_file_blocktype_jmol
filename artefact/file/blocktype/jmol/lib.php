@@ -308,8 +308,8 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         $html .= 'use: "HTML5",';
         $html .= 'jarPath: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/java",';
         $html .= 'j2sPath: "'.$wwwroot.'artefact/file/blocktype/jmol/jsmol/j2s",';
-        $html .= 'jarFile: "JmolApplet0.jar",';
-        $html .= 'isSigned: false,';
+        $html .= 'jarFile: "JmolAppletSigned0.jar",';
+        $html .= 'isSigned: true,';
         $html .= 'disableJ2SLoadMonitor: true,';
         $html .= 'disableInitialConsole: true,';
         $html .= 'addSelectionOptions: false,';
