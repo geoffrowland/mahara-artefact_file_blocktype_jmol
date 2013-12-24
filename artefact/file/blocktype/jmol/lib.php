@@ -289,13 +289,15 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         $molext = $molfile[1];        
         $molpath = $url . '&ext=.' . $molext;
         if ($molfile[2] == 'gz'){
-			$molpath = $molpath.'.gz';
-		}	
-        $html = '<div style="width:'.$width.'px">'; // container div for Jmol and Controls
+	   $molpath = $molpath.'.gz';
+	}	
+        $html = '<div style="width:'.$width.'px">';
         $html .= '<a title="Download structure data file" href ="' . $url . '">' . hsc($artefact->get('title')) . '</a><br />';
-        $html .= '<div id="jmoldiv'.$id.'" style="width:'.$width.'px; height:'.$height.'px; border: 1px solid lightgray; background-color: lightgray; background-image:url(\''.get_config('wwwroot').'artefact/file/blocktype/jmol/Jmol_icon_94.png\'); background-repeat: no-repeat"></div>';
+        $html .= '</div>';
+        $html .= '<div style="position:relative; width:'.$width.'px; height:'.$height.'px">'; // Container div to allow Jmol/JSmol z-index to be set        
+        $html .= '<div id="jmoldiv'.$id.'" style="position:absolute; z-index:0; width:'.$width.'px; height:'.$height.'px; border: 1px solid lightgray; background-color: lightgray; background-image:url(\''.get_config('wwwroot').'artefact/file/blocktype/jmol/Jmol_icon_94.png\'); background-repeat: no-repeat"></div>';
+        $html .= '</div>';       
         $html .= '<div id="controls'.$id.'" style="text-align:left; width:'.$width.'px; border: 1px solid lightgray"></div>';
-        $html .= '</div>'; // Close Container div
         $html .= '<script type="text/javascript">';
         $html .= 'var info'.$id.' = {';
         $html .= 'color: "white",';
@@ -334,7 +336,7 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         $controls = str_replace("jmolHtml(", "Jmol._documentWrite(", $controls);
         $controls = str_replace("jmolBr()", "Jmol._documentWrite('<br />')", $controls);
 
-        // display Jmol applet. 
+        // display Jmol/JSmol. 
         // Uncomment the following lines if you are using MathJax to display formulae.
         // Delays display of JSmol until after MathJax has finished rendering and avoids Math Errors.
         //$html .= 'MathJax.Hub.Queue(function () {';
