@@ -1284,7 +1284,7 @@ class ArtefactTypeFile extends ArtefactTypeFileBase {
 
     public static function get_icon($options=null) {
         global $THEME;
-        return $THEME->get_url('images/file.gif');
+        return $THEME->get_url('images/file.png');
     }
 
     public static function get_config_options() {
