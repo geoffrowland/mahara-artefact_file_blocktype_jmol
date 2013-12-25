@@ -337,18 +337,15 @@ jmolCheckbox("spin on", "spin off", "'.get_string('Spin', 'blocktype.file/jmol')
         $controls = str_replace("jmolBr()", "Jmol._documentWrite('<br />')", $controls);
 
         // display Jmol/JSmol. 
-        // Uncomment the following lines if you are using MathJax to display formulae.
+        // Uncomment the following  two lines if you are using MathJax to display formulae.
         // Delays display of JSmol until after MathJax has finished rendering and avoids Math Errors.
-        //$html .= 'MathJax.Hub.Queue(function () {';
-        //$html .= 'loadJmol'.$id.'();';
-        //$html .= '});';
-        //$html .= 'loadJmol'.$id.' = function() {';
+        //$html .= 'MathJax.Hub.Queue(function () {';               
         $html .= 'Jmol.setDocument(0);';
         $html .= 'Jmol._alertNoBinary = false;';
         $html .= 'Jmol.getApplet("jmol'.$id.'", info'.$id.');';
         $html .= 'jQuery("#jmoldiv'.$id.'").html(Jmol.getAppletHtml(jmol'.$id.'));';
         $html .= 'jQuery("#controls'.$id.'").html('.$controls.')';
-        //$html .= '}';
+        //$html .= '});';
         $html .= '</script>';
         return $html;
     }
