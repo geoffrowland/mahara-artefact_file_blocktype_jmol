@@ -260,7 +260,7 @@ then you may need to uncomment the following code from /artefact/file/blocktype/
 
 This results in JSmol rendering after MathJax equations have displayed and prevents 'Math Processing Errors' due to conflicts between MathJax and JSmol.
 
-This plugin includes a recent Jmol/JSmol stable version (13.2.7) located in the /jsmol folder. However, JSmol code is frequently updated so you may wish to replace/update the contents of the /jsmol folder with the latest version, unpacked from http://chemapps.stolaf.edu/jmol/zip/jsmol.zip 
+This plugin includes a recent Jmol/JSmol stable version (14.0) located in the /jsmol folder. However, JSmol code is frequently updated so you may wish to replace/update the contents of the /jsmol folder with the latest version, unpacked from http://chemapps.stolaf.edu/jmol/zip/jsmol.zip 
 
 Finally, visit your Site Administration > Plugin Administration page to enable the plugin. Remember to select the chemical file types you wish to use from the configuration menu. 
 
