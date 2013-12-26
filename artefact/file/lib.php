@@ -1,27 +1,11 @@
 <?php
 /**
- * Mahara: Electronic portfolio, weblog, resume builder and social networking
- * Copyright (C) 2006-2009 Catalyst IT Ltd and others; see:
- *                         http://wiki.mahara.org/Contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @package    mahara
  * @subpackage artefact-internal
  * @author     Catalyst IT Ltd
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL
- * @copyright  (C) 2006-2009 Catalyst IT Ltd http://catalyst.net.nz
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL version 3 or later
+ * @copyright  For copyright information on Mahara, please see the README file distributed with this software.
  *
  */
 
@@ -354,8 +338,8 @@ abstract class ArtefactTypeFileBase extends ArtefactType {
 
     // Sort folders before files; then use nat sort order.
     public static function my_files_cmp($a, $b) {
-        return strnatcasecmp((-2 * isset($a->isparent) + ($a->artefacttype != 'folder')) . $a->title,
-                             (-2 * isset($b->isparent) + ($b->artefacttype != 'folder')) . $b->title);
+        return strnatcasecmp((-2 * isset($a->isparent) + ($a->artefacttype != 'folder')) . 'a' . $a->title,
+                             (-2 * isset($b->isparent) + ($b->artefacttype != 'folder')) . 'a' . $b->title);
     }
 
 
@@ -804,6 +788,17 @@ abstract class ArtefactTypeFileBase extends ArtefactType {
         );
     }
 
+    /**
+     * returns duplicated file/folder artefacts
+     *
+     * @param array $values
+     */
+    public static function get_duplicated_artefacts(array $values) {
+        return array();
+    }
+    public static function get_existing_artefacts(array $values) {
+        return array();
+    }
 }
 
 
@@ -1709,9 +1704,6 @@ class ArtefactTypeFolder extends ArtefactTypeFileBase {
             foreach ($childrecords as &$child) {
                 $c = artefact_instance_from_id($child->id);
                 $child->title = $child->hovertitle = $c->get('title');
-                if (!empty($options['simpledisplay'])) {
-                    $child->title = str_shorten_text($child->title, 20);
-                }
                 $child->date = format_date(strtotime($child->mtime), 'strfdaymonthyearshort');
                 $child->iconsrc = call_static_method(generate_artefact_class_name($child->artefacttype), 'get_icon', array('id' => $child->id, 'viewid' => isset($options['viewid']) ? $options['viewid'] : 0));
             }
@@ -1727,7 +1719,7 @@ class ArtefactTypeFolder extends ArtefactTypeFileBase {
 
     public static function get_icon($options=null) {
         global $THEME;
-        return $THEME->get_url('images/folder.gif');
+        return $THEME->get_url('images/folder.png');
     }
 
     public static function collapse_config() {
@@ -1962,7 +1954,7 @@ class ArtefactTypeImage extends ArtefactTypeFile {
             $url .= '&size=' . $options['size'];
         }
         else {
-            $url .= '&maxheight=20&maxwidth=20';
+            $url .= '&maxheight=24&maxwidth=24';
         }
 
         return $url;
@@ -2010,7 +2002,7 @@ class ArtefactTypeImage extends ArtefactTypeFile {
             return array('html' => $smarty->fetch('artefact:file:image_render_self.tpl'), 'javascript' => '');
         }
         $result = parent::render_self($options);
-        $result['html'] = '<div class="fl filedata-icon"><h4>'
+        $result['html'] = '<div class="fl filedata-icon"><h4 class="title">'
             . get_string('Preview', 'artefact.file') . '</h4><a href="'
             . hsc($url) . '"><img src="' . hsc($downloadpath) . '&maxwidth=400&maxheight=180'
             . '" alt=""></a></div>' . $result['html'];
@@ -2166,7 +2158,7 @@ class ArtefactTypeArchive extends ArtefactTypeFile {
 
     public static function get_icon($options=null) {
         global $THEME;
-        return $THEME->get_url('images/archive.gif');
+        return $THEME->get_url('images/archive.png');
     }
 
     public function open_archive() {
@@ -2422,11 +2414,14 @@ class ArtefactTypeVideo extends ArtefactTypeFile {
 
     public static function is_valid_file($path, $data) {
         $validtypes = self::video_mime_types();
-        if (!isset($validtypes[$data->guess])) {
-            return false;
+        if (isset($validtypes[$data->guess])) {
+            $data->filetype = $data->guess;
+            return true;
         }
-        $data->filetype = $data->guess;
-        return true;
+        else if (!empty($validtypes[$data->filetype])) {
+            return true;
+        }
+        return false;
     }
 
     public static function video_file_descriptions() {
@@ -2456,7 +2451,7 @@ class ArtefactTypeVideo extends ArtefactTypeFile {
 
     public static function get_icon($options=null) {
         global $THEME;
-        return $THEME->get_url('images/video.gif');
+        return $THEME->get_url('images/video.png');
     }
 
 }
@@ -2465,11 +2460,14 @@ class ArtefactTypeAudio extends ArtefactTypeFile {
 
     public static function is_valid_file($path, $data) {
         $validtypes = self::audio_mime_types();
-        if (!isset($validtypes[$data->guess])) {
-            return false;
+        if (isset($validtypes[$data->guess])) {
+            $data->filetype = $data->guess;
+            return true;
         }
-        $data->filetype = $data->guess;
-        return true;
+        else if (!empty($validtypes[$data->filetype])) {
+            return true;
+        }
+        return false;
     }
 
     public static function audio_file_descriptions() {
@@ -2500,6 +2498,6 @@ class ArtefactTypeAudio extends ArtefactTypeFile {
 
     public static function get_icon($options=null) {
         global $THEME;
-        return $THEME->get_url('images/audio.gif');
+        return $THEME->get_url('images/audio.png');
     }
 }
