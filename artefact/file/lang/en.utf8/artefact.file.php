@@ -1,27 +1,11 @@
 <?php
 /**
- * Mahara: Electronic portfolio, weblog, resume builder and social networking
- * Copyright (C) 2006-2009 Catalyst IT Ltd and others; see:
- *                         http://wiki.mahara.org/Contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @package    mahara
  * @subpackage lang
  * @author     Catalyst IT Ltd
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL
- * @copyright  (C) 2006-2009 Catalyst IT Ltd http://catalyst.net.nz
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL version 3 or later
+ * @copyright  For copyright information on Mahara, please see the README file distributed with this software.
  *
  */
 
@@ -33,7 +17,8 @@ $string['sitefilesloaded'] = 'Site files loaded';
 $string['addafile'] = 'Add a file';
 $string['archive'] = 'Archive';
 $string['bytes'] = 'bytes';
-$string['cannoteditfolder'] = 'You do not have permission to add content to this folder';
+$string['cannotviewfolder'] = 'You do not have permission to view the content of this folder.';
+$string['cannoteditfolder'] = 'You do not have permission to add content to this folder.';
 $string['cannoteditfoldersubmitted'] = 'You cannot add content to a folder in a submitted page.';
 $string['cannotremovefromsubmittedfolder'] = 'You cannot remove content from a folder in a submitted page.';
 $string['cannotextractfilesubmitted'] = 'You cannot extract a file in a submitted page.';
@@ -85,6 +70,7 @@ $string['Details'] = 'Details';
 $string['Download'] = 'Download';
 $string['downloadfile'] = 'Download %s';
 $string['downloadoriginalversion'] = 'Download the original version';
+$string['dragdrophere'] = 'Drop files here to upload';
 $string['editfile'] = 'Edit file';
 $string['editfolder'] = 'Edit folder';
 $string['editingfailed'] = 'Editing failed: file or folder does not exist any more';
@@ -107,7 +93,8 @@ $string['fileexists'] = 'File exists';
 $string['fileexistsoverwritecancel'] =  'A file with that name already exists. You can try a different name or overwrite the existing file.';
 $string['filelistloaded'] = 'File list loaded';
 $string['filemoved'] = 'File moved successfully';
-$string['filenamefieldisrequired'] = 'The file field is required';
+$string['filenamefieldisrequired'] = 'The file field is required.';
+$string['filenamefieldisrequired1'] = 'The file / folder name is required.';
 $string['fileinstructions'] = 'Upload your images, documents or other files for inclusion in pages. You can select multiple files to upload them at once. Drag and drop the icons to move files between folders.';
 $string['filethingdeleted'] = '%s deleted';
 $string['filewithnameexists'] = 'A file or folder with the name "%s" already exists.';
@@ -259,6 +246,7 @@ $string['profileicons'] = 'Profile pictures';
 $string['Default'] = 'Default';
 $string['defaultprofileicon'] = 'This is currently set as your default profile picture.';
 $string['deleteselectedicons'] = 'Delete selected profile pictures';
+$string['editprofileicon'] = 'Edit profile picture';
 $string['profileicon'] = 'Profile picture';
 $string['noimagesfound'] = 'No images found';
 $string['profileiconaddedtoimagesfolder'] = "Your profile picture has been uploaded to your '%s' folder.";
