@@ -49,7 +49,7 @@ Note that development has focused on the functionality of this, and there may be
 Installation
 ------------
 
-The latest version of the plugin, for Mahara 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 and 1.8 can be downloaded from Github
+The latest version of the plugin, for Mahara 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8 and 1.9 can be downloaded from Github
 
 https://github.com/geoffrowland/mahara-artefact_file_blocktype_jmol
 
@@ -78,7 +78,7 @@ $string['xyz'] = 'XYZ Coordinate Animation Format';
 
 Then you need to edit /artefact/file/lib.php to set the appropriate file mime-types. The precise details differ depending on the Mahara version.
 
-For Mahara 1.8, 1.7 and 1.6: Immediately after:
+For Mahara 1.9, 1.8, 1.7 and 1.6: Immediately after:
 
        if (empty($data->filetype) || $data->filetype == 'application/octet-stream') {
            $data->filetype = $data->guess;
